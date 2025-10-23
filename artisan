@@ -1,0 +1,5 @@
+#!/usr/bin/env php
+<?php
+// Minimal artisan stub to keep familiar commands available in the skeleton
+
+echo "Artisan stub - this skeleton does not include full framework binaries.\n";

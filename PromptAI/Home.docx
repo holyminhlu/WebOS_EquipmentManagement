@@ -1,0 +1,13 @@
+Create a detailed PHP code for the homepage (index.php) of a university equipment borrowing and returning system website for Tra Vinh University. 
+The website allows lecturers, staff, and students to borrow and return teaching equipment like projectors, laptops, microphones, etc.
+As a UX/UI expert, ensure the design follows best practices:
+
+Layout Structure: Use a clean, modern layout with a header (including university logo, navigation menu), hero section (welcoming message and call-to-action buttons), main content sections (e.g., features overview, popular equipment list, quick links), and footer (contact info, copyright).
+Responsive Design: Make it fully responsive for mobile, tablet, and desktop using CSS media queries or a framework like Bootstrap (include Bootstrap CDN for simplicity).
+Accessibility: Follow WCAG guidelines – use semantic HTML, alt text for images, ARIA labels where needed, high contrast colors, and keyboard navigation support.
+UI Elements: Use intuitive navigation (e.g., dropdown menus if needed), buttons with hover effects, cards for displaying equipment or features. Colors: Use university-themed colors (e.g., blue and white for Tra Vinh University – assume #003366 for primary, #FFFFFF for background). Fonts: Sans-serif like Arial or Google Fonts (e.g., Roboto).
+User Experience: Prioritize ease of use – prominent search bar for equipment, login/register buttons in header, clear CTAs like "Borrow Now" or "View Borrowed Items". Include placeholders for dynamic PHP content (e.g., session-based user greeting, database-fetched equipment list).
+PHP Integration: Use PHP for dynamic elements like including header/footer files, session management for logged-in users, and simulating a simple equipment list (hardcode for demo or assume a MySQL connection). Keep code modular (separate CSS in style.css, JS if needed).
+Quality Assurance: Ensure cross-browser compatibility, no inline styles where possible, validate HTML/CSS, and add comments in code for maintainability. Optimize for performance (minimize HTTP requests).
+
+Output the complete code in a single index.php file, with embedded CSS and any necessary includes. Assume basic setup: no full backend, but include example PHP code for user authentication check and a mock equipment array. Use Vietnamese language for UI text to match the university context (e.g., "Trang Chủ", "Mượn Thiết Bị").

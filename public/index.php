@@ -436,47 +436,6 @@ $stats = [
             outline-offset: 2px;
         }
         
-        /* User Greeting */
-        .user-greeting {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 1rem 0;
-            text-align: center;
-        }
-        
-        .user-greeting-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-        
-        .user-greeting-text {
-            font-size: 1rem;
-        }
-        
-        .user-greeting-actions {
-            display: flex;
-            gap: 1rem;
-        }
-        
-        .user-greeting-actions a {
-            color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: var(--border-radius);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: var(--transition);
-        }
-        
-        .user-greeting-actions a:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
         /* Quick Links Section */
         .quick-links-section {
             background-color: var(--bg-white);
@@ -629,27 +588,6 @@ $stats = [
     <!-- Skip to main content link for accessibility -->
     <a href="#main-content" class="skip-link">Bỏ qua đến nội dung chính</a>
     
-    <!-- User Greeting Bar (if logged in) -->
-    <?php if ($isLoggedIn): ?>
-    <div class="user-greeting" role="banner" aria-label="Thông tin người dùng">
-        <div class="user-greeting-content">
-            <div class="user-greeting-text">
-                <i class="fas fa-user-circle" aria-hidden="true"></i>
-                Chào mừng, <strong><?php echo htmlspecialchars($userName); ?></strong> 
-                (<?php echo htmlspecialchars($userRole); ?>)
-            </div>
-            <div class="user-greeting-actions">
-                <a href="dashboard.php" aria-label="Đi đến trang quản lý">
-                    <i class="fas fa-tachometer-alt" aria-hidden="true"></i> Quản lý
-                </a>
-                <a href="logout.php" aria-label="Đăng xuất khỏi hệ thống">
-                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Đăng xuất
-                </a>
-            </div>
-        </div>
-    </div>
-    <?php endif; ?>
-    
     <!-- Header -->
     <header class="header" role="banner">
         <nav class="navbar" role="navigation" aria-label="Điều hướng chính">
@@ -679,10 +617,10 @@ $stats = [
                         </a>
                     <?php else: ?>
                         <a href="dashboard.php" class="btn-login" aria-label="Đi đến trang quản lý">
-                            <i class="fas fa-tachometer-alt" aria-hidden="true"></i> Bảng điều khiển
+                            <i class="fas fa-tachometer-alt" aria-hidden="true"></i> Dashboard
                         </a>
-                        <a href="my-borrows.php" class="btn-register" aria-label="Xem các thiết bị đã mượn">
-                            <i class="fas fa-list" aria-hidden="true"></i> Thiết bị của tôi
+                        <a href="logout.php" class="btn-register" aria-label="Đăng xuất">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Đăng xuất
                         </a>
                     <?php endif; ?>
                 </div>

@@ -1,3 +1,59 @@
+<?php
+/**
+ * Trang đăng nhập
+ * 
+ * @author System Development Team
+ * @version 1.0
+ */
+
+session_start();
+
+// Nếu đã đăng nhập, chuyển đến dashboard
+if (isset($_SESSION['user_id'])) {
+    header('Location: dashboard.php');
+    exit;
+}
+
+require_once __DIR__ . '/../includes/auth.php';
+
+$error = '';
+$success = '';
+
+// Xử lý đăng nhập
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $remember = isset($_POST['remember']);
+    
+    if (empty($username) || empty($password)) {
+        $error = 'Vui lòng nhập đầy đủ thông tin đăng nhập';
+    } else {
+        $user = loginUser($username, $password);
+        
+        if ($user) {
+            // Lưu thông tin vào session
+            $_SESSION['user_id'] = $user['MaNguoiDung'];
+            $_SESSION['user_name'] = $user['HoTen'];
+            $_SESSION['user_username'] = $user['TenDangNhap'];
+            $_SESSION['user_email'] = $user['Email'];
+            $_SESSION['user_role'] = $user['TenVaiTro'];
+            $_SESSION['user_role_id'] = $user['MaVaiTro'];
+            
+            // Nếu chọn ghi nhớ đăng nhập
+            if ($remember) {
+                // Set cookie (30 ngày)
+                setcookie('remember_user', $user['MaNguoiDung'], time() + (30 * 24 * 60 * 60), '/');
+            }
+            
+            // Chuyển đến dashboard
+            header('Location: dashboard.php');
+            exit;
+        } else {
+            $error = 'Tên đăng nhập/Email hoặc mật khẩu không đúng';
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -29,17 +85,32 @@
     <main class="auth-page">
         <div class="auth-card">
             <h2>Đăng nhập</h2>
-            <form class="auth-form" action="#" method="post">
+            
+            <?php if ($error): ?>
+                <div class="alert alert-error" style="background: #f8d7da; color: #721c24; padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
+                    <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?>
+                </div>
+            <?php endif; ?>
+            
+            <?php if ($success): ?>
+                <div class="alert alert-success" style="background: #d4edda; color: #155724; padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
+                    <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($success); ?>
+                </div>
+            <?php endif; ?>
+            
+            <form class="auth-form" method="post" action="">
+                <input type="hidden" name="login" value="1">
                 <div class="form-group">
-                    <label for="email">Email hoặc tên đăng nhập</label>
-                    <input id="email" name="email" type="text" placeholder="you@tvu.edu.vn" required>
+                    <label for="username">Tên đăng nhập hoặc Email</label>
+                    <input id="username" name="username" type="text" placeholder="Tên đăng nhập hoặc Email" 
+                           value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>" required>
                 </div>
                 <div class="form-group">
                     <label for="password">Mật khẩu</label>
                     <input id="password" name="password" type="password" placeholder="Mật khẩu" required>
                 </div>
                 <div class="form-group">
-                    <label><input type="checkbox" name="remember"> Ghi nhớ đăng nhập</label>
+                    <label><input type="checkbox" name="remember" value="1"> Ghi nhớ đăng nhập</label>
                 </div>
                 <div class="auth-actions">
                     <button type="submit" class="btn-primary">Đăng nhập</button>

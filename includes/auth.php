@@ -119,14 +119,64 @@ function registerUser($userData) {
         }
     }
     
-    // Tạo mã người dùng tự động
-    $maNguoiDung = generateUserCode();
-    
     // Hash mật khẩu
     $hashedPassword = password_hash($userData['MatKhau'], PASSWORD_DEFAULT);
     
-    // Mã vai trò mặc định: 2 = Sinh viên (cần điều chỉnh theo database của bạn)
-    $maVaiTro = isset($userData['MaVaiTro']) ? $userData['MaVaiTro'] : 2;
+    // Phân vai trò tự động dựa trên thông tin đăng ký
+    // 1. Nếu có mã sinh viên → Sinh viên (MaVaiTro = 3)
+    // 2. Nếu không có mã sinh viên nhưng có khoa → Giảng viên (MaVaiTro = 2)
+    // 3. Admin không đăng ký qua form thông thường
+    if (isset($userData['MaVaiTro']) && !empty($userData['MaVaiTro'])) {
+        // Nếu đã được chỉ định vai trò từ bên ngoài (ví dụ: admin tạo tài khoản)
+        $maVaiTro = (int)$userData['MaVaiTro'];
+    } elseif (!empty($userData['MaSinhVien'])) {
+        // Có mã sinh viên → Sinh viên
+        $maVaiTro = 3;
+    } elseif (!empty($userData['MaKhoa'])) {
+        // Không có mã sinh viên nhưng có khoa → Giảng viên
+        $maVaiTro = 2;
+    } else {
+        // Mặc định: Sinh viên (nếu không có thông tin gì)
+        $maVaiTro = 3;
+    }
+    
+    // Tạo mã người dùng tự động với retry logic để tránh trùng
+    $maNguoiDung = null;
+    $maxRetries = 20;
+    $retryCount = 0;
+    $startNumber = null;
+    
+    while ($retryCount < $maxRetries) {
+        $maNguoiDung = generateUserCode($startNumber);
+        
+        // Kiểm tra mã đã tồn tại chưa (kể cả đã xóa)
+        $existing = dbQueryOne(
+            "SELECT MaNguoiDung FROM NguoiDung WHERE MaNguoiDung = ?",
+            [$maNguoiDung]
+        );
+        
+        if (!$existing) {
+            // Mã chưa tồn tại, có thể sử dụng
+            break;
+        }
+        
+        // Mã đã tồn tại, tăng số và thử lại
+        $retryCount++;
+        if ($startNumber === null) {
+            // Lấy số từ mã vừa tạo
+            $startNumber = (int) preg_replace('/[^0-9]/', '', $maNguoiDung);
+        }
+        $startNumber++; // Tăng lên 1 và thử lại
+        usleep(50000); // Đợi 0.05 giây để tránh race condition
+    }
+    
+    if ($retryCount >= $maxRetries) {
+        return [
+            'success' => false,
+            'message' => 'Không thể tạo mã người dùng. Vui lòng thử lại sau.',
+            'user' => null
+        ];
+    }
     
     // Insert vào database
     $sql = "INSERT INTO NguoiDung (
@@ -173,23 +223,27 @@ function registerUser($userData) {
 
 /**
  * Tạo mã người dùng tự động
+ * @param int $startNumber Số bắt đầu (dùng khi retry)
  * @return string Mã người dùng mới
  */
-function generateUserCode() {
-    // Lấy mã người dùng lớn nhất
-    $lastUser = dbQueryOne(
-        "SELECT MaNguoiDung FROM NguoiDung ORDER BY MaNguoiDung DESC LIMIT 1"
-    );
-    
-    if ($lastUser) {
-        // Tách số từ mã cũ và tăng lên 1
-        $lastNumber = (int) preg_replace('/[^0-9]/', '', $lastUser['MaNguoiDung']);
-        $newNumber = $lastNumber + 1;
-        return 'ND' . str_pad($newNumber, 8, '0', STR_PAD_LEFT);
-    } else {
-        // Nếu chưa có người dùng nào, bắt đầu từ ND00000001
-        return 'ND00000001';
+function generateUserCode($startNumber = null) {
+    if ($startNumber === null) {
+        // Lấy mã người dùng lớn nhất (kể cả đã xóa để tránh trùng)
+        $lastUser = dbQueryOne(
+            "SELECT MaNguoiDung FROM NguoiDung ORDER BY MaNguoiDung DESC LIMIT 1"
+        );
+        
+        if ($lastUser) {
+            // Tách số từ mã cũ và tăng lên 1
+            $lastNumber = (int) preg_replace('/[^0-9]/', '', $lastUser['MaNguoiDung']);
+            $startNumber = $lastNumber + 1;
+        } else {
+            // Nếu chưa có người dùng nào, bắt đầu từ 1
+            $startNumber = 1;
+        }
     }
+    
+    return 'ND' . str_pad($startNumber, 8, '0', STR_PAD_LEFT);
 }
 
 /**

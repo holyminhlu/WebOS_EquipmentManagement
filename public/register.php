@@ -30,8 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         'Email' => trim($_POST['email'] ?? ''),
         'SoDienThoai' => trim($_POST['phone'] ?? ''),
         'MaKhoa' => !empty($_POST['makhoa']) ? (int)$_POST['makhoa'] : null,
-        'MaSinhVien' => trim($_POST['masinhvien'] ?? ''),
-        'MaVaiTro' => 2 // Mặc định là Sinh viên
+        'MaSinhVien' => trim($_POST['masinhvien'] ?? '')
+        // MaVaiTro sẽ được tự động phân loại trong registerUser()
     ];
     
     // Kiểm tra xác nhận mật khẩu
@@ -91,13 +91,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             <h2>Đăng ký tài khoản</h2>
             
             <?php if ($error): ?>
-                <div class="alert alert-error" style="background: #f8d7da; color: #721c24; padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
+                <div class="alert alert-error">
                     <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?>
                 </div>
             <?php endif; ?>
             
             <?php if ($success): ?>
-                <div class="alert alert-success" style="background: #d4edda; color: #155724; padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
+                <div class="alert alert-success">
                     <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($success); ?> Đang chuyển đến trang chủ...
                 </div>
             <?php endif; ?>
@@ -105,17 +105,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             <form class="auth-form" method="post" action="">
                 <input type="hidden" name="register" value="1">
                 <div class="form-group">
-                    <label for="name">Họ và tên <span style="color: red;">*</span></label>
+                    <label for="name">Họ và tên <span class="required">*</span></label>
                     <input id="name" name="name" type="text" placeholder="Nguyễn Văn A" 
                            value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>" required>
                 </div>
                 <div class="form-group">
-                    <label for="username">Tên đăng nhập <span style="color: red;">*</span></label>
+                    <label for="username">Tên đăng nhập <span class="required">*</span></label>
                     <input id="username" name="username" type="text" placeholder="Tên đăng nhập" 
                            value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>" required>
                 </div>
                 <div class="form-group">
-                    <label for="email">Email <span style="color: red;">*</span></label>
+                    <label for="email">Email <span class="required">*</span></label>
                     <input id="email" name="email" type="email" placeholder="you@tvu.edu.vn" 
                            value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>" required>
                 </div>
@@ -125,7 +125,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                            value="<?php echo isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : ''; ?>">
                 </div>
                 <div class="form-group">
-                    <label for="masinhvien">Mã sinh viên</label>
+                    <label for="masinhvien">
+                        Mã sinh viên
+                        <span class="tooltip-icon" tabindex="0" role="button" aria-label="Thông tin về mã sinh viên" data-tooltip="Nếu bạn là Giảng viên vui lòng không nhập trường này !">
+                            <i class="fas fa-question-circle"></i>
+                        </span>
+                    </label>
                     <input id="masinhvien" name="masinhvien" type="text" placeholder="SV001234" 
                            value="<?php echo isset($_POST['masinhvien']) ? htmlspecialchars($_POST['masinhvien']) : ''; ?>">
                 </div>
@@ -142,11 +147,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="password">Mật khẩu <span style="color: red;">*</span></label>
+                    <label for="password">Mật khẩu <span class="required">*</span></label>
                     <input id="password" name="password" type="password" placeholder="Mật khẩu (tối thiểu 6 ký tự)" required>
                 </div>
                 <div class="form-group">
-                    <label for="password_confirm">Xác nhận mật khẩu <span style="color: red;">*</span></label>
+                    <label for="password_confirm">Xác nhận mật khẩu <span class="required">*</span></label>
                     <input id="password_confirm" name="password_confirm" type="password" placeholder="Nhập lại mật khẩu" required>
                 </div>
                 <div class="auth-actions">
@@ -167,5 +172,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             </div>
         </div>
     </footer>
+
+    <script>
+        // Tooltip functionality - Đảm bảo tooltip hoạt động
+        document.addEventListener('DOMContentLoaded', function() {
+            const tooltipIcons = document.querySelectorAll('.tooltip-icon');
+            
+            tooltipIcons.forEach(function(icon) {
+                // Toggle tooltip on click
+                icon.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const isActive = this.classList.contains('tooltip-active');
+                    
+                    // Remove active from all tooltips
+                    tooltipIcons.forEach(function(otherIcon) {
+                        otherIcon.classList.remove('tooltip-active');
+                    });
+                    
+                    // Toggle this tooltip
+                    if (!isActive) {
+                        this.classList.add('tooltip-active');
+                    }
+                });
+                
+                // Close tooltip when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!icon.contains(e.target)) {
+                        icon.classList.remove('tooltip-active');
+                    }
+                });
+                
+                // Keyboard support
+                icon.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.classList.toggle('tooltip-active');
+                    }
+                    if (e.key === 'Escape') {
+                        this.classList.remove('tooltip-active');
+                    }
+                });
+                
+                // Ensure tooltip shows on hover (backup)
+                icon.addEventListener('mouseenter', function() {
+                    // Tooltip sẽ tự hiển thị qua CSS :hover
+                });
+            });
+            
+            // Debug: Log để kiểm tra
+            console.log('Tooltip icons found:', tooltipIcons.length);
+        });
+    </script>
 </body>
 </html>

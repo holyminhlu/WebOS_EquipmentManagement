@@ -123,32 +123,6 @@ function formatMoney($amount) {
     <link rel="stylesheet" href="css/styleDashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <style>
-        /* Minimal modal styles for confirmation popup */
-        .modal {
-            position: fixed;
-            inset: 0;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,0.45);
-            z-index: 2000;
-            padding: 1rem;
-        }
-        .modal.open { display: flex; }
-        .modal-content {
-            background: #fff;
-            border-radius: 8px;
-            padding: 1.25rem 1.5rem;
-            max-width: 520px;
-            width: 100%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        }
-        .modal-content h3 { margin: 0 0 0.5rem 0; color: var(--primary-color); }
-        .modal-content p { margin: 0 0 1rem 0; color: #333; }
-        .modal-actions { text-align: right; }
-        .modal-actions .btn { margin-left: 0.5rem; }
-    </style>
 </head>
 <body>
     <!-- Header -->
@@ -428,9 +402,6 @@ function formatMoney($amount) {
                                 <th>Ngày duyệt</th>
                                 <th>Ghi chú</th>
                                 <th>Chi tiết</th>
-                                <?php if (isset($user['MaVaiTro']) && (int)$user['MaVaiTro'] === 1): ?>
-                                    <th>Hành động</th>
-                                <?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
@@ -459,19 +430,6 @@ function formatMoney($amount) {
                                                 <i class="fas fa-eye"></i> Xem
                                             </button>
                                         </td>
-                                        <?php if (isset($user['MaVaiTro']) && (int)$user['MaVaiTro'] === 1): ?>
-                                            <td>
-                                                <?php if ($yc['TrangThai'] !== 'Đã duyệt'): ?>
-                                                    <form method="post" action="actions/yeucaumuon_action.php" class="confirm-approve" data-mayeucau="<?php echo htmlspecialchars($yc['MaYeuCau']); ?>">
-                                                        <input type="hidden" name="action" value="approve">
-                                                        <input type="hidden" name="MaYeuCau" value="<?php echo htmlspecialchars($yc['MaYeuCau']); ?>">
-                                                        <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Duyệt</button>
-                                                    </form>
-                                                <?php else: ?>
-                                                    <span class="status-badge success">Đã duyệt</span>
-                                                <?php endif; ?>
-                                            </td>
-                                        <?php endif; ?>
                                 </tr>
                                     <tr id="ycDetail_<?php echo $yc['MaYeuCau']; ?>" style="display: none;">
                                         <td colspan="10">
@@ -511,6 +469,9 @@ function formatMoney($amount) {
                                 <th>Ngày kết thúc</th>
                                 <th>Trạng thái</th>
                                 <th>Ngày tạo</th>
+                                <?php if (isset($user['MaVaiTro']) && (int)$user['MaVaiTro'] === 1): ?>
+                                    <th>Hành động</th>
+                                <?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
@@ -530,6 +491,19 @@ function formatMoney($amount) {
                                         </span>
                                     </td>
                                     <td><?php echo formatDate($dt['NgayTao']); ?></td>
+                                    <?php if (isset($user['MaVaiTro']) && (int)$user['MaVaiTro'] === 1): ?>
+                                        <td>
+                                            <?php if ($dt['TrangThai'] !== 'Đã duyệt'): ?>
+                                                <form method="post" action="actions/dattruoc_action.php" onsubmit="return confirm('Xác nhận duyệt đặt trước này?');" style="display:inline-block;">
+                                                    <input type="hidden" name="action" value="approve">
+                                                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($dt['MaDatTruoc']); ?>">
+                                                    <button type="submit" class="btn btn-primary">Duyệt</button>
+                                                </form>
+                                            <?php else: ?>
+                                                <span class="text-muted">Đã duyệt</span>
+                                            <?php endif; ?>
+                                        </td>
+                                    <?php endif; ?>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -679,74 +653,7 @@ function formatMoney($amount) {
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
         }
-
-        // Use a custom modal for approve confirmation and double-submit prevention
-        document.addEventListener('DOMContentLoaded', function () {
-            var activeForm = null;
-            var modal = document.getElementById('confirmModal');
-            var modalMessage = document.getElementById('confirmModalMessage');
-            var btnConfirm = document.getElementById('confirmModalConfirm');
-            var btnCancel = document.getElementById('confirmModalCancel');
-
-            document.querySelectorAll('form.confirm-approve').forEach(function(form) {
-                form.addEventListener('submit', function (e) {
-                    // If already processing, block
-                    if (form.dataset.processing === '1') {
-                        e.preventDefault();
-                        return false;
-                    }
-
-                    e.preventDefault();
-                    activeForm = form;
-                    var ma = form.dataset.mayeucau || '';
-                    modalMessage.textContent = 'Bạn có chắc muốn duyệt yêu cầu ' + ma + ' không?';
-                    modal.classList.add('open');
-                    return false;
-                });
-            });
-
-            btnCancel.addEventListener('click', function () {
-                modal.classList.remove('open');
-                activeForm = null;
-            });
-
-            btnConfirm.addEventListener('click', function () {
-                if (!activeForm) {
-                    modal.classList.remove('open');
-                    return;
-                }
-                // mark processing and disable submit buttons
-                activeForm.dataset.processing = '1';
-                activeForm.querySelectorAll('button[type="submit"]').forEach(function(btn){
-                    btn.disabled = true;
-                    btn.dataset.orig = btn.innerText;
-                    btn.innerText = 'Đang xử lý...';
-                });
-                modal.classList.remove('open');
-                // submit the form programmatically
-                activeForm.submit();
-            });
-
-            // close modal when clicking outside content
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    modal.classList.remove('open');
-                    activeForm = null;
-                }
-            });
-        });
     </script>
-    <!-- Confirmation modal -->
-    <div id="confirmModal" class="modal" aria-hidden="true">
-        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
-            <h3 id="confirmModalTitle">Xác nhận duyệt</h3>
-            <p id="confirmModalMessage">Bạn có chắc muốn duyệt?</p>
-            <div class="modal-actions">
-                <button id="confirmModalCancel" class="btn btn-secondary">Hủy</button>
-                <button id="confirmModalConfirm" class="btn btn-success">Duyệt</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
 

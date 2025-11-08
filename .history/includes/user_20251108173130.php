@@ -31,19 +31,18 @@ function getUserInfo($maNguoiDung) {
  * @return array
  */
 function getUserPhieuMuon($maNguoiDung) {
-    // use lowercase/backticked table names to match DB dump
     $sql = "SELECT pm.*, 
                    nd_phat.HoTen as TenNguoiPhat,
                    ycm.MucDich,
                    ycm.NgayDuKienBatDau,
                    ycm.NgayDuKienKetThuc
-            FROM `phieumuon` pm
-            LEFT JOIN `nguoidung` nd_phat ON pm.NguoiPhatThietBi = nd_phat.MaNguoiDung
-            LEFT JOIN `yeucaumuon` ycm ON pm.MaYeuCau = ycm.MaYeuCau
+            FROM PhieuMuon pm
+            LEFT JOIN NguoiDung nd_phat ON pm.NguoiPhatThietBi = nd_phat.MaNguoiDung
+            LEFT JOIN YeuCauMuon ycm ON pm.MaYeuCau = ycm.MaYeuCau
             WHERE pm.MaNguoiMuon = ?
             AND pm.IsDeleted = 0
             ORDER BY pm.NgayPhat DESC";
-
+    
     return dbQuery($sql, [$maNguoiDung]);
 }
 
@@ -58,14 +57,14 @@ function getChiTietMuon($maPhieu) {
                    tb.SoSerial,
                    ltb.TenLoai,
                    tttb.TenTrangThai
-            FROM `chitietmuon` ctm
-            INNER JOIN `thietbi` tb ON ctm.MaThietBi = tb.MaThietBi
-            INNER JOIN `loaithietbi` ltb ON tb.MaLoaiThietBi = ltb.MaLoaiThietBi
-            LEFT JOIN `trangthaithietbi` tttb ON tb.MaTrangThai = tttb.MaTrangThai
+            FROM ChiTietMuon ctm
+            INNER JOIN ThietBi tb ON ctm.MaThietBi = tb.MaThietBi
+            INNER JOIN LoaiThietBi ltb ON tb.MaLoaiThietBi = ltb.MaLoaiThietBi
+            LEFT JOIN TrangThaiThietBi tttb ON tb.MaTrangThai = tttb.MaTrangThai
             WHERE ctm.MaPhieu = ?
             AND ctm.IsDeleted = 0
             ORDER BY ctm.MaChiTiet";
-
+    
     return dbQuery($sql, [$maPhieu]);
 }
 
@@ -114,26 +113,6 @@ function getAllYeuCauMuon($limit = 0) {
 }
 
 /**
- * Lấy tất cả phiếu mượn (dành cho admin)
- * @param int $limit Số bản ghi cần lấy (0 = tất cả)
- * @return array
- */
-function getAllPhieuMuon($limit = 0) {
-    $sql = "SELECT pm.*, nd_phat.HoTen as TenNguoiPhat, ycm.MucDich
-            FROM `phieumuon` pm
-            LEFT JOIN `nguoidung` nd_phat ON pm.NguoiPhatThietBi = nd_phat.MaNguoiDung
-            LEFT JOIN `yeucaumuon` ycm ON pm.MaYeuCau = ycm.MaYeuCau
-            WHERE pm.IsDeleted = 0
-            ORDER BY pm.NgayPhat DESC";
-
-    if ($limit > 0) {
-        $sql .= " LIMIT " . (int)$limit;
-    }
-
-    return dbQuery($sql);
-}
-
-/**
  * Lấy danh sách đặt trước của người dùng
  * @param string $maNguoiDung Mã người dùng
  * @return array
@@ -141,32 +120,13 @@ function getAllPhieuMuon($limit = 0) {
 function getUserDatTruoc($maNguoiDung) {
     $sql = "SELECT dt.*, 
                    ltb.TenLoai
-            FROM `dattruoc` dt
-            INNER JOIN `loaithietbi` ltb ON dt.MaLoaiThietBi = ltb.MaLoaiThietBi
+            FROM DatTruoc dt
+            INNER JOIN LoaiThietBi ltb ON dt.MaLoaiThietBi = ltb.MaLoaiThietBi
             WHERE dt.MaNguoiYeuCau = ?
             AND dt.IsDeleted = 0
             ORDER BY dt.NgayTao DESC";
-
+    
     return dbQuery($sql, [$maNguoiDung]);
-}
-
-/**
- * Lấy tất cả đặt trước (dành cho admin)
- * @param int $limit Số bản ghi cần lấy (0 = tất cả)
- * @return array
- */
-function getAllDatTruoc($limit = 0) {
-    $sql = "SELECT dt.*, ltb.TenLoai
-            FROM `dattruoc` dt
-            INNER JOIN `loaithietbi` ltb ON dt.MaLoaiThietBi = ltb.MaLoaiThietBi
-            WHERE dt.IsDeleted = 0
-            ORDER BY dt.NgayTao DESC";
-
-    if ($limit > 0) {
-        $sql .= " LIMIT " . (int)$limit;
-    }
-
-    return dbQuery($sql);
 }
 
 /**
@@ -177,7 +137,7 @@ function getAllDatTruoc($limit = 0) {
  */
 function getUserThongBao($maNguoiDung, $limit = 0) {
     $sql = "SELECT * 
-            FROM `thongbao`
+            FROM ThongBao
             WHERE MaNguoiDung = ?
             AND IsDeleted = 0
             ORDER BY NgayGui DESC";
@@ -197,32 +157,13 @@ function getUserThongBao($maNguoiDung, $limit = 0) {
 function getUserPhieuPhat($maNguoiDung) {
     $sql = "SELECT pp.*, 
                    pm.SoPhieu
-            FROM `phieuphat` pp
-            INNER JOIN `phieumuon` pm ON pp.MaPhieu = pm.MaPhieu
+            FROM PhieuPhat pp
+            INNER JOIN PhieuMuon pm ON pp.MaPhieu = pm.MaPhieu
             WHERE pp.MaNguoiDung = ?
             AND pp.IsDeleted = 0
             ORDER BY pp.NgayTao DESC";
-
+    
     return dbQuery($sql, [$maNguoiDung]);
-}
-
-/**
- * Lấy tất cả phiếu phạt (dành cho admin)
- * @param int $limit Số bản ghi cần lấy (0 = tất cả)
- * @return array
- */
-function getAllPhieuPhat($limit = 0) {
-    $sql = "SELECT pp.*, pm.SoPhieu
-            FROM `phieuphat` pp
-            INNER JOIN `phieumuon` pm ON pp.MaPhieu = pm.MaPhieu
-            WHERE pp.IsDeleted = 0
-            ORDER BY pp.NgayTao DESC";
-
-    if ($limit > 0) {
-        $sql .= " LIMIT " . (int)$limit;
-    }
-
-    return dbQuery($sql);
 }
 
 /**
@@ -232,7 +173,7 @@ function getAllPhieuPhat($limit = 0) {
  */
 function countUnreadNotifications($maNguoiDung) {
     $sql = "SELECT COUNT(*) as count 
-            FROM `thongbao`
+            FROM ThongBao
             WHERE MaNguoiDung = ?
             AND DaDoc = 0
             AND IsDeleted = 0";
@@ -247,7 +188,7 @@ function countUnreadNotifications($maNguoiDung) {
  */
 function getKhoaPhongBan() {
     $sql = "SELECT * 
-            FROM `khoaphongban`
+            FROM KhoaPhongBan
             WHERE IsDeleted = 0
             ORDER BY TenKhoa ASC";
     
@@ -260,7 +201,7 @@ function getKhoaPhongBan() {
  */
 function getVaiTro() {
     $sql = "SELECT * 
-            FROM `vaitro`
+            FROM VaiTro
             WHERE IsDeleted = 0
             ORDER BY MaVaiTro ASC";
     

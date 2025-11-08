@@ -1,0 +1,87 @@
+<?php
+/**
+ * Handle approve action for YeuCauMuon
+ * - Admin only
+ * - Creates a PhieuMuon record from YeuCauMuon
+ * - Marks the YeuCauMuon as 'Đã duyệt' and records approver
+ * - Inserts a thongbao for the requester
+ */
+session_start();
+
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/user.php';
+require_once __DIR__ . '/../../includes/db.php';
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: ../dashboard.php');
+    exit;
+}
+
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../login.php');
+    exit;
+}
+
+$user = getUserInfo($_SESSION['user_id']);
+if (!$user || (int)$user['MaVaiTro'] !== 1) {
+    // not an admin
+    header('Location: ../dashboard.php');
+    exit;
+}
+
+$action = $_POST['action'] ?? '';
+$maYeuCau = $_POST['MaYeuCau'] ?? '';
+
+if ($action !== 'approve' || empty($maYeuCau)) {
+    header('Location: ../dashboard.php');
+    exit;
+}
+
+// Fetch request
+$yc = dbQueryOne("SELECT * FROM `yeucaumuon` WHERE MaYeuCau = ? AND IsDeleted = 0", [$maYeuCau]);
+if (!$yc) {
+    header('Location: ../dashboard.php');
+    exit;
+}
+
+// If already approved, nothing to do
+if (isset($yc['TrangThai']) && $yc['TrangThai'] === 'Đã duyệt') {
+    header('Location: ../dashboard.php');
+    exit;
+}
+
+// Generate new MaPhieu (PM###) by inspecting last MaPhieu
+$last = dbQueryOne("SELECT MaPhieu FROM `phieumuon` ORDER BY MaPhieu DESC LIMIT 1");
+$nextNum = 1;
+if ($last && !empty($last['MaPhieu'])) {
+    if (preg_match('/(\d+)$/', $last['MaPhieu'], $m)) {
+        $nextNum = intval($m[1]) + 1;
+    }
+}
+$maPhieu = 'PM' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+$soPhieu = $maPhieu; // fallback: use the same value as SoPhieu
+
+$ngayPhat = date('Y-m-d H:i:s');
+$ngayPhaiTra = $yc['NgayDuKienKetThuc'] ?? null;
+$trangThai = 'Đang mượn';
+
+// Insert into phieumuon (use a minimal column set that is expected to exist)
+$sqlInsert = "INSERT INTO `phieumuon` (MaPhieu, SoPhieu, MaYeuCau, MaNguoiMuon, NgayPhat, NgayPhaiTra, TrangThai, NguoiPhatThietBi) VALUES (?,?,?,?,?,?,?,?)";
+$insertResult = dbExecute($sqlInsert, [$maPhieu, $soPhieu, $maYeuCau, $yc['MaNguoiYeuCau'], $ngayPhat, $ngayPhaiTra, $trangThai, $_SESSION['user_id']]);
+
+if ($insertResult === false) {
+    // Failed to create phieu; abort
+    header('Location: ../dashboard.php');
+    exit;
+}
+
+// Update yeucaumuon: mark as approved and set approver + date (if columns exist)
+dbExecute("UPDATE `yeucaumuon` SET TrangThai = ?, NguoiDuyet = ?, NgayDuyet = NOW() WHERE MaYeuCau = ?", ['Đã duyệt', $_SESSION['user_id'], $maYeuCau]);
+
+// Insert a notification for the requester
+$tieuDe = "Yêu cầu {$maYeuCau} đã được duyệt";
+$noiDung = "Yêu cầu mượn của bạn đã được duyệt. Phiếu mượn: {$maPhieu}. Vui lòng kiểm tra phần Phiếu mượn.";
+dbExecute("INSERT INTO `thongbao` (MaNguoiDung, TieuDe, NoiDung, NgayGui, DaDoc, IsDeleted) VALUES (?,?,?,?,0,0)", [$yc['MaNguoiYeuCau'], $tieuDe, $noiDung, $ngayPhat]);
+
+header('Location: ../dashboard.php');
+exit;

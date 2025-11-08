@@ -680,73 +680,35 @@ function formatMoney($amount) {
             event.target.classList.add('active');
         }
 
-        // Use a custom modal for approve confirmation and double-submit prevention
+        // Global handler for approve confirmation and double-submit prevention
         document.addEventListener('DOMContentLoaded', function () {
-            var activeForm = null;
-            var modal = document.getElementById('confirmModal');
-            var modalMessage = document.getElementById('confirmModalMessage');
-            var btnConfirm = document.getElementById('confirmModalConfirm');
-            var btnCancel = document.getElementById('confirmModalCancel');
-
             document.querySelectorAll('form.confirm-approve').forEach(function(form) {
                 form.addEventListener('submit', function (e) {
-                    // If already processing, block
+                    // Prevent double submission if already processing
                     if (form.dataset.processing === '1') {
                         e.preventDefault();
                         return false;
                     }
 
-                    e.preventDefault();
-                    activeForm = form;
                     var ma = form.dataset.mayeucau || '';
-                    modalMessage.textContent = 'Bạn có chắc muốn duyệt yêu cầu ' + ma + ' không?';
-                    modal.classList.add('open');
-                    return false;
+                    var ok = confirm('Bạn có chắc muốn duyệt yêu cầu ' + ma + ' không?');
+                    if (!ok) {
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    // mark processing and disable all submit buttons inside the form
+                    form.dataset.processing = '1';
+                    form.querySelectorAll('button[type="submit"]').forEach(function(btn){
+                        btn.disabled = true;
+                        btn.innerText = 'Đang xử lý...';
+                    });
+
+                    return true;
                 });
-            });
-
-            btnCancel.addEventListener('click', function () {
-                modal.classList.remove('open');
-                activeForm = null;
-            });
-
-            btnConfirm.addEventListener('click', function () {
-                if (!activeForm) {
-                    modal.classList.remove('open');
-                    return;
-                }
-                // mark processing and disable submit buttons
-                activeForm.dataset.processing = '1';
-                activeForm.querySelectorAll('button[type="submit"]').forEach(function(btn){
-                    btn.disabled = true;
-                    btn.dataset.orig = btn.innerText;
-                    btn.innerText = 'Đang xử lý...';
-                });
-                modal.classList.remove('open');
-                // submit the form programmatically
-                activeForm.submit();
-            });
-
-            // close modal when clicking outside content
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    modal.classList.remove('open');
-                    activeForm = null;
-                }
             });
         });
     </script>
-    <!-- Confirmation modal -->
-    <div id="confirmModal" class="modal" aria-hidden="true">
-        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
-            <h3 id="confirmModalTitle">Xác nhận duyệt</h3>
-            <p id="confirmModalMessage">Bạn có chắc muốn duyệt?</p>
-            <div class="modal-actions">
-                <button id="confirmModalCancel" class="btn btn-secondary">Hủy</button>
-                <button id="confirmModalConfirm" class="btn btn-success">Duyệt</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
 

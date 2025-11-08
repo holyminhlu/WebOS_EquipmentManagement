@@ -207,25 +207,6 @@ function getUserPhieuPhat($maNguoiDung) {
 }
 
 /**
- * Lấy tất cả phiếu phạt (dành cho admin)
- * @param int $limit Số bản ghi cần lấy (0 = tất cả)
- * @return array
- */
-function getAllPhieuPhat($limit = 0) {
-    $sql = "SELECT pp.*, pm.SoPhieu
-            FROM `phieuphat` pp
-            INNER JOIN `phieumuon` pm ON pp.MaPhieu = pm.MaPhieu
-            WHERE pp.IsDeleted = 0
-            ORDER BY pp.NgayTao DESC";
-
-    if ($limit > 0) {
-        $sql .= " LIMIT " . (int)$limit;
-    }
-
-    return dbQuery($sql);
-}
-
-/**
  * Đếm số thông báo chưa đọc
  * @param string $maNguoiDung Mã người dùng
  * @return int

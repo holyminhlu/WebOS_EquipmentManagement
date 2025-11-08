@@ -114,26 +114,6 @@ function getAllYeuCauMuon($limit = 0) {
 }
 
 /**
- * Lấy tất cả phiếu mượn (dành cho admin)
- * @param int $limit Số bản ghi cần lấy (0 = tất cả)
- * @return array
- */
-function getAllPhieuMuon($limit = 0) {
-    $sql = "SELECT pm.*, nd_phat.HoTen as TenNguoiPhat, ycm.MucDich
-            FROM `phieumuon` pm
-            LEFT JOIN `nguoidung` nd_phat ON pm.NguoiPhatThietBi = nd_phat.MaNguoiDung
-            LEFT JOIN `yeucaumuon` ycm ON pm.MaYeuCau = ycm.MaYeuCau
-            WHERE pm.IsDeleted = 0
-            ORDER BY pm.NgayPhat DESC";
-
-    if ($limit > 0) {
-        $sql .= " LIMIT " . (int)$limit;
-    }
-
-    return dbQuery($sql);
-}
-
-/**
  * Lấy danh sách đặt trước của người dùng
  * @param string $maNguoiDung Mã người dùng
  * @return array
@@ -148,25 +128,6 @@ function getUserDatTruoc($maNguoiDung) {
             ORDER BY dt.NgayTao DESC";
 
     return dbQuery($sql, [$maNguoiDung]);
-}
-
-/**
- * Lấy tất cả đặt trước (dành cho admin)
- * @param int $limit Số bản ghi cần lấy (0 = tất cả)
- * @return array
- */
-function getAllDatTruoc($limit = 0) {
-    $sql = "SELECT dt.*, ltb.TenLoai
-            FROM `dattruoc` dt
-            INNER JOIN `loaithietbi` ltb ON dt.MaLoaiThietBi = ltb.MaLoaiThietBi
-            WHERE dt.IsDeleted = 0
-            ORDER BY dt.NgayTao DESC";
-
-    if ($limit > 0) {
-        $sql .= " LIMIT " . (int)$limit;
-    }
-
-    return dbQuery($sql);
 }
 
 /**
@@ -204,25 +165,6 @@ function getUserPhieuPhat($maNguoiDung) {
             ORDER BY pp.NgayTao DESC";
 
     return dbQuery($sql, [$maNguoiDung]);
-}
-
-/**
- * Lấy tất cả phiếu phạt (dành cho admin)
- * @param int $limit Số bản ghi cần lấy (0 = tất cả)
- * @return array
- */
-function getAllPhieuPhat($limit = 0) {
-    $sql = "SELECT pp.*, pm.SoPhieu
-            FROM `phieuphat` pp
-            INNER JOIN `phieumuon` pm ON pp.MaPhieu = pm.MaPhieu
-            WHERE pp.IsDeleted = 0
-            ORDER BY pp.NgayTao DESC";
-
-    if ($limit > 0) {
-        $sql .= " LIMIT " . (int)$limit;
-    }
-
-    return dbQuery($sql);
 }
 
 /**

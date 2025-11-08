@@ -151,25 +151,6 @@ function getUserDatTruoc($maNguoiDung) {
 }
 
 /**
- * Lấy tất cả đặt trước (dành cho admin)
- * @param int $limit Số bản ghi cần lấy (0 = tất cả)
- * @return array
- */
-function getAllDatTruoc($limit = 0) {
-    $sql = "SELECT dt.*, ltb.TenLoai
-            FROM `dattruoc` dt
-            INNER JOIN `loaithietbi` ltb ON dt.MaLoaiThietBi = ltb.MaLoaiThietBi
-            WHERE dt.IsDeleted = 0
-            ORDER BY dt.NgayTao DESC";
-
-    if ($limit > 0) {
-        $sql .= " LIMIT " . (int)$limit;
-    }
-
-    return dbQuery($sql);
-}
-
-/**
  * Lấy danh sách thông báo của người dùng
  * @param string $maNguoiDung Mã người dùng
  * @param int $limit Số lượng thông báo cần lấy (0 = tất cả)
@@ -204,25 +185,6 @@ function getUserPhieuPhat($maNguoiDung) {
             ORDER BY pp.NgayTao DESC";
 
     return dbQuery($sql, [$maNguoiDung]);
-}
-
-/**
- * Lấy tất cả phiếu phạt (dành cho admin)
- * @param int $limit Số bản ghi cần lấy (0 = tất cả)
- * @return array
- */
-function getAllPhieuPhat($limit = 0) {
-    $sql = "SELECT pp.*, pm.SoPhieu
-            FROM `phieuphat` pp
-            INNER JOIN `phieumuon` pm ON pp.MaPhieu = pm.MaPhieu
-            WHERE pp.IsDeleted = 0
-            ORDER BY pp.NgayTao DESC";
-
-    if ($limit > 0) {
-        $sql .= " LIMIT " . (int)$limit;
-    }
-
-    return dbQuery($sql);
 }
 
 /**

@@ -12,14 +12,12 @@ session_start();
 // Kiểm tra đăng nhập
 // Development helper: allow local impersonation for debugging
 // Usage (ONLY for local dev): /public/dashboard.php?debug_user=ND003&show_raw=1
-// normalize localhost check (covers ::1, 127.0.0.1 and IPv4-mapped IPv6)
-$remote = $_SERVER['REMOTE_ADDR'] ?? '';
-$isLocal = in_array($remote, ['127.0.0.1', '::1', '::ffff:127.0.0.1']);
-// Allow forcing debug when developer includes force_debug=1 (temporary)
-$forceDebug = isset($_GET['force_debug']) && $_GET['force_debug'] === '1';
-$enableDebug = $isLocal || $forceDebug;
-if (isset($_GET['debug_user']) && $enableDebug) {
-    $_SESSION['user_id'] = $_GET['debug_user'];
+if (isset($_GET['debug_user'])) {
+    $remote = $_SERVER['REMOTE_ADDR'] ?? '';
+    // Only allow when accessing from localhost (127.0.0.1 or ::1)
+    if (in_array($remote, ['127.0.0.1', '::1'])) {
+        $_SESSION['user_id'] = $_GET['debug_user'];
+    }
 }
 
 if (!isset($_SESSION['user_id'])) {
@@ -40,66 +38,19 @@ if (!$user) {
 }
 
 // Lấy dữ liệu
-// Phiếu mượn: admin xem tất cả, user xem của mình
-if (isset($user['MaVaiTro']) && (int)$user['MaVaiTro'] === 1) {
-    $phieuMuon = getAllPhieuMuon();
-} else {
-    $phieuMuon = getUserPhieuMuon($_SESSION['user_id']);
-}
-
-$yeuCauMuon = [];
-// Nếu là admin (MaVaiTro = 1) => hiển thị tất cả yêu cầu để quản lý
-if (isset($user['MaVaiTro']) && (int)$user['MaVaiTro'] === 1) {
-    // Lấy tất cả yêu cầu (hàm mới trong includes/user.php)
-    $yeuCauMuon = getAllYeuCauMuon();
-} else {
-    $yeuCauMuon = getUserYeuCauMuon($_SESSION['user_id']);
-}
-$datTruoc = [];
-// Đặt trước: admin xem tất cả, user xem của mình
-if (isset($user['MaVaiTro']) && (int)$user['MaVaiTro'] === 1) {
-    $datTruoc = getAllDatTruoc();
-} else {
-    $datTruoc = getUserDatTruoc($_SESSION['user_id']);
-}
+$phieuMuon = getUserPhieuMuon($_SESSION['user_id']);
+$yeuCauMuon = getUserYeuCauMuon($_SESSION['user_id']);
+$datTruoc = getUserDatTruoc($_SESSION['user_id']);
 $thongBao = getUserThongBao($_SESSION['user_id'], 10);
-$phieuPhat = [];
-// Phiếu phạt: admin xem tất cả, user xem của mình
-if (isset($user['MaVaiTro']) && (int)$user['MaVaiTro'] === 1) {
-    $phieuPhat = getAllPhieuPhat();
-} else {
-    $phieuPhat = getUserPhieuPhat($_SESSION['user_id']);
-}
+$phieuPhat = getUserPhieuPhat($_SESSION['user_id']);
 $unreadNotifications = countUnreadNotifications($_SESSION['user_id']);
 
 // Dev-only raw output for debugging query results (only from localhost)
-if (isset($_GET['show_raw']) && $enableDebug) {
-    // Dev-only raw output for debugging can be enabled by setting ?show_raw=1 when developing (no visual output in production)
-}
-
-// Fallback: nếu hàm getUserYeuCauMuon trả về rỗng, thử truy vấn trực tiếp vào bảng yeucaumuon
-if (empty($yeuCauMuon)) {
-    // Đảm bảo hàm dbQuery có sẵn (được require trong includes/user.php)
-    $sqlFallback = "SELECT ycm.*, nd_duyet.HoTen as TenNguoiDuyet
-                    FROM `yeucaumuon` ycm
-                    LEFT JOIN `nguoidung` nd_duyet ON ycm.NguoiDuyet = nd_duyet.MaNguoiDung
-                    WHERE ycm.MaNguoiYeuCau = ?
-                    AND ycm.IsDeleted = 0
-                    ORDER BY ycm.NgayGui DESC";
-
-    $try = dbQuery($sqlFallback, [$_SESSION['user_id']]);
-    if (!empty($try)) {
-        $yeuCauMuon = $try;
-        // Optional debug message when fallback succeeded
-        if ($enableDebug) {
-            // fallback succeeded; no debug UI output here
-        }
-    }
-}
-
-// Additional verbose debug: print session and user info when debug enabled
-if ($enableDebug) {
-    // End of debug section (no verbose debug output shown)
+if (isset($_GET['show_raw']) && in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'])) {
+    echo '<div style="padding:1rem;background:#fff8c4;border:1px solid #f1e6a8;margin:1rem 2rem;border-radius:6px;">';
+    echo '<strong>DEBUG: $yeuCauMuon (count=' . count($yeuCauMuon) . ')</strong>';
+    echo '<pre>' . htmlspecialchars(print_r($yeuCauMuon, true)) . '</pre>';
+    echo '</div>';
 }
 
 // Helper function để format date
@@ -123,32 +74,6 @@ function formatMoney($amount) {
     <link rel="stylesheet" href="css/styleDashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <style>
-        /* Minimal modal styles for confirmation popup */
-        .modal {
-            position: fixed;
-            inset: 0;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,0.45);
-            z-index: 2000;
-            padding: 1rem;
-        }
-        .modal.open { display: flex; }
-        .modal-content {
-            background: #fff;
-            border-radius: 8px;
-            padding: 1.25rem 1.5rem;
-            max-width: 520px;
-            width: 100%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        }
-        .modal-content h3 { margin: 0 0 0.5rem 0; color: var(--primary-color); }
-        .modal-content p { margin: 0 0 1rem 0; color: #333; }
-        .modal-actions { text-align: right; }
-        .modal-actions .btn { margin-left: 0.5rem; }
-    </style>
 </head>
 <body>
     <!-- Header -->
@@ -428,9 +353,6 @@ function formatMoney($amount) {
                                 <th>Ngày duyệt</th>
                                 <th>Ghi chú</th>
                                 <th>Chi tiết</th>
-                                <?php if (isset($user['MaVaiTro']) && (int)$user['MaVaiTro'] === 1): ?>
-                                    <th>Hành động</th>
-                                <?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
@@ -459,19 +381,6 @@ function formatMoney($amount) {
                                                 <i class="fas fa-eye"></i> Xem
                                             </button>
                                         </td>
-                                        <?php if (isset($user['MaVaiTro']) && (int)$user['MaVaiTro'] === 1): ?>
-                                            <td>
-                                                <?php if ($yc['TrangThai'] !== 'Đã duyệt'): ?>
-                                                    <form method="post" action="actions/yeucaumuon_action.php" class="confirm-approve" data-mayeucau="<?php echo htmlspecialchars($yc['MaYeuCau']); ?>">
-                                                        <input type="hidden" name="action" value="approve">
-                                                        <input type="hidden" name="MaYeuCau" value="<?php echo htmlspecialchars($yc['MaYeuCau']); ?>">
-                                                        <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Duyệt</button>
-                                                    </form>
-                                                <?php else: ?>
-                                                    <span class="status-badge success">Đã duyệt</span>
-                                                <?php endif; ?>
-                                            </td>
-                                        <?php endif; ?>
                                 </tr>
                                     <tr id="ycDetail_<?php echo $yc['MaYeuCau']; ?>" style="display: none;">
                                         <td colspan="10">
@@ -584,7 +493,6 @@ function formatMoney($amount) {
                                 <th>Lý do phạt</th>
                                 <th>Trạng thái thanh toán</th>
                                 <th>Ngày thanh toán</th>
-                                <th>Chi tiết</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -599,25 +507,6 @@ function formatMoney($amount) {
                                         </span>
                                     </td>
                                     <td><?php echo formatDate($pp['NgayThanhToan']); ?></td>
-                                    <td>
-                                        <button class="btn btn-secondary" onclick="togglePhieuPhatDetail('<?php echo $pp['MaPhat']; ?>')">
-                                            <i class="fas fa-eye"></i> Xem
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr id="ppDetail_<?php echo $pp['MaPhat']; ?>" style="display:none;">
-                                    <td colspan="6">
-                                        <div style="padding:1rem;background:var(--bg-light);border-radius:var(--border-radius);">
-                                            <h4 style="color:var(--primary-color);">Chi tiết phiếu phạt: <?php echo htmlspecialchars($pp['MaPhat']); ?></h4>
-                                            <div class="detail-row">
-                                                <div class="detail-row-item"><strong>Số phiếu mượn:</strong> <?php echo htmlspecialchars($pp['MaPhieu']); ?></div>
-                                                <div class="detail-row-item"><strong>Số tiền:</strong> <?php echo formatMoney($pp['SoTien']); ?></div>
-                                                <div class="detail-row-item"><strong>Lý do:</strong> <?php echo htmlspecialchars($pp['LyDo'] ?? 'N/A'); ?></div>
-                                                <div class="detail-row-item"><strong>Trạng thái thanh toán:</strong> <?php echo $pp['DaThanhToan'] ? 'Đã thanh toán' : 'Chưa thanh toán'; ?></div>
-                                                <div class="detail-row-item"><strong>Ngày thanh toán:</strong> <?php echo formatDate($pp['NgayThanhToan']); ?></div>
-                                            </div>
-                                        </div>
-                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -656,16 +545,6 @@ function formatMoney($amount) {
             }
         }
 
-        function togglePhieuPhatDetail(maPhat) {
-            const row = document.getElementById('ppDetail_' + maPhat);
-            if (!row) return;
-            if (row.style.display === 'none' || row.style.display === '') {
-                row.style.display = 'table-row';
-            } else {
-                row.style.display = 'none';
-            }
-        }
-
         function showTab(tabName) {
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
@@ -679,74 +558,7 @@ function formatMoney($amount) {
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
         }
-
-        // Use a custom modal for approve confirmation and double-submit prevention
-        document.addEventListener('DOMContentLoaded', function () {
-            var activeForm = null;
-            var modal = document.getElementById('confirmModal');
-            var modalMessage = document.getElementById('confirmModalMessage');
-            var btnConfirm = document.getElementById('confirmModalConfirm');
-            var btnCancel = document.getElementById('confirmModalCancel');
-
-            document.querySelectorAll('form.confirm-approve').forEach(function(form) {
-                form.addEventListener('submit', function (e) {
-                    // If already processing, block
-                    if (form.dataset.processing === '1') {
-                        e.preventDefault();
-                        return false;
-                    }
-
-                    e.preventDefault();
-                    activeForm = form;
-                    var ma = form.dataset.mayeucau || '';
-                    modalMessage.textContent = 'Bạn có chắc muốn duyệt yêu cầu ' + ma + ' không?';
-                    modal.classList.add('open');
-                    return false;
-                });
-            });
-
-            btnCancel.addEventListener('click', function () {
-                modal.classList.remove('open');
-                activeForm = null;
-            });
-
-            btnConfirm.addEventListener('click', function () {
-                if (!activeForm) {
-                    modal.classList.remove('open');
-                    return;
-                }
-                // mark processing and disable submit buttons
-                activeForm.dataset.processing = '1';
-                activeForm.querySelectorAll('button[type="submit"]').forEach(function(btn){
-                    btn.disabled = true;
-                    btn.dataset.orig = btn.innerText;
-                    btn.innerText = 'Đang xử lý...';
-                });
-                modal.classList.remove('open');
-                // submit the form programmatically
-                activeForm.submit();
-            });
-
-            // close modal when clicking outside content
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    modal.classList.remove('open');
-                    activeForm = null;
-                }
-            });
-        });
     </script>
-    <!-- Confirmation modal -->
-    <div id="confirmModal" class="modal" aria-hidden="true">
-        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
-            <h3 id="confirmModalTitle">Xác nhận duyệt</h3>
-            <p id="confirmModalMessage">Bạn có chắc muốn duyệt?</p>
-            <div class="modal-actions">
-                <button id="confirmModalCancel" class="btn btn-secondary">Hủy</button>
-                <button id="confirmModalConfirm" class="btn btn-success">Duyệt</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
 

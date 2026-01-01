@@ -119,8 +119,8 @@ function formatMoney($amount) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Hệ thống mượn trả thiết bị</title>
-    <link rel="stylesheet" href="css/styleAbout.css">
-    <link rel="stylesheet" href="css/styleDashboard.css">
+    <link rel="stylesheet" href="css/styleAbout.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="css/styleDashboard.css?v=<?php echo time(); ?>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -148,6 +148,45 @@ function formatMoney($amount) {
         .modal-content p { margin: 0 0 1rem 0; color: #333; }
         .modal-actions { text-align: right; }
         .modal-actions .btn { margin-left: 0.5rem; }
+        
+        /* User info in header */
+        .user-info-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #4169E1 0%, #1e40af 100%);
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 2px 6px rgba(65, 105, 225, 0.25);
+            margin-right: 0.75rem;
+        }
+        .user-info-box .user-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: white;
+            color: #4169E1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .user-info-box .user-details {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.15;
+        }
+        .user-info-box .user-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .user-info-box .user-role {
+            font-size: 0.7rem;
+            opacity: 0.85;
+        }
     </style>
 </head>
 <body>
@@ -166,14 +205,22 @@ function formatMoney($amount) {
                 </div>
                 <div class="nav-menu">
                     <a href="index.php" class="nav-link">Trang chủ</a>
-                    <a href="dashboard.php" class="nav-link active">Dashboard</a>
                     <a href="about.php" class="nav-link">Giới thiệu</a>
+                    <a href="equipment.php" class="nav-link">Thiết bị</a>
+                    <a href="regulations.php" class="nav-link">Quy định & Hướng dẫn</a>
                     <a href="contact.php" class="nav-link">Liên hệ</a>
+                    <a href="dashboard.php" class="nav-link active">Dashboard</a>
                 </div>
                 <div class="nav-auth">
-                    <span style="color: var(--primary-color); margin-right: 1rem;">
-                        <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($user['HoTen']); ?>
-                    </span>
+                    <div class="user-info-box">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="user-details">
+                            <span class="user-name"><?php echo htmlspecialchars($user['HoTen']); ?></span>
+                            <span class="user-role"><?php echo htmlspecialchars($user['TenVaiTro'] ?? 'Người dùng'); ?></span>
+                        </div>
+                    </div>
                     <a href="logout.php" class="btn-login">
                         <i class="fas fa-sign-out-alt"></i> Đăng xuất
                     </a>
@@ -428,9 +475,7 @@ function formatMoney($amount) {
                                 <th>Ngày duyệt</th>
                                 <th>Ghi chú</th>
                                 <th>Chi tiết</th>
-                                <?php if (isset($user['MaVaiTro']) && (int)$user['MaVaiTro'] === 1): ?>
-                                    <th>Hành động</th>
-                                <?php endif; ?>
+                                <th>Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -459,10 +504,11 @@ function formatMoney($amount) {
                                                 <i class="fas fa-eye"></i> Xem
                                             </button>
                                         </td>
-                                        <?php if (isset($user['MaVaiTro']) && (int)$user['MaVaiTro'] === 1): ?>
-                                            <td>
+                                        <td>
+                                            <?php if (isset($user['MaVaiTro']) && (int)$user['MaVaiTro'] === 1): ?>
+                                                <!-- Admin: Nút duyệt -->
                                                 <?php if ($yc['TrangThai'] !== 'Đã duyệt'): ?>
-                                                    <form method="post" action="actions/yeucaumuon_action.php" class="confirm-approve" data-mayeucau="<?php echo htmlspecialchars($yc['MaYeuCau']); ?>">
+                                                    <form method="post" action="actions/yeucaumuon_action.php" class="confirm-approve" data-mayeucau="<?php echo htmlspecialchars($yc['MaYeuCau']); ?>" style="display:inline-block;">
                                                         <input type="hidden" name="action" value="approve">
                                                         <input type="hidden" name="MaYeuCau" value="<?php echo htmlspecialchars($yc['MaYeuCau']); ?>">
                                                         <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Duyệt</button>
@@ -470,8 +516,19 @@ function formatMoney($amount) {
                                                 <?php else: ?>
                                                     <span class="status-badge success">Đã duyệt</span>
                                                 <?php endif; ?>
-                                            </td>
-                                        <?php endif; ?>
+                                            <?php else: ?>
+                                                <!-- User: Nút hủy -->
+                                                <?php if ($yc['TrangThai'] === 'Chờ duyệt'): ?>
+                                                    <button type="button" class="btn btn-danger" onclick="cancelYeuCau('<?php echo htmlspecialchars($yc['MaYeuCau']); ?>')">
+                                                        <i class="fas fa-times"></i> Hủy yêu cầu
+                                                    </button>
+                                                <?php else: ?>
+                                                    <span class="status-badge <?php echo ($yc['TrangThai'] == 'Đã duyệt') ? 'success' : 'danger'; ?>">
+                                                        <?php echo htmlspecialchars($yc['TrangThai']); ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                        </td>
                                 </tr>
                                     <tr id="ycDetail_<?php echo $yc['MaYeuCau']; ?>" style="display: none;">
                                         <td colspan="10">
@@ -654,6 +711,34 @@ function formatMoney($amount) {
             } else {
                 row.style.display = 'none';
             }
+        }
+        
+        function cancelYeuCau(maYeuCau) {
+            if (!confirm('Bạn có chắc chắn muốn hủy yêu cầu mượn này?\n\nSau khi hủy, yêu cầu sẽ không thể được duyệt.')) {
+                return;
+            }
+            
+            // Gửi AJAX request để hủy yêu cầu
+            const formData = new FormData();
+            formData.append('maYeuCau', maYeuCau);
+            
+            fetch('actions/cancel_yeucaumuon.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    // Reload trang để cập nhật trạng thái
+                    window.location.reload();
+                } else {
+                    alert('Lỗi: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Lỗi kết nối: ' + error.message);
+            });
         }
 
         function togglePhieuPhatDetail(maPhat) {

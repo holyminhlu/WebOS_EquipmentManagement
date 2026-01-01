@@ -1,16 +1,70 @@
+<?php
+/**
+ * Trang Giới thiệu - Hệ thống mượn trả thiết bị giảng dạy
+ */
+
+session_start();
+
+// Lấy thông tin user nếu đã đăng nhập
+$isLoggedIn = isset($_SESSION['user_id']);
+$userData = null;
+if ($isLoggedIn) {
+    require_once __DIR__ . '/../includes/user.php';
+    $userData = getUserInfo($_SESSION['user_id']);
+}
+?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giới thiệu - Hệ thống mượn trả thiết bị</title>
-    <link rel="stylesheet" href="css/styleAbout.css">
+    <link rel="stylesheet" href="css/styleAbout.css?v=<?php echo time(); ?>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* Đẩy nội dung lên cao hơn, gần menu */
         .about-section:first-of-type {
             padding-top: 1rem;
+        }
+        
+        /* User info box styles */
+        .user-info-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #4169E1 0%, #1e40af 100%);
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 2px 6px rgba(65, 105, 225, 0.25);
+            margin-right: 0.75rem;
+        }
+        .user-info-box .user-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: white;
+            color: #4169E1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .user-info-box .user-details {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.15;
+        }
+        .user-info-box .user-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .user-info-box .user-role {
+            font-size: 0.7rem;
+            opacity: 0.85;
         }
     </style>
 </head>
@@ -20,7 +74,9 @@
         <nav class="navbar">
             <div class="nav-container">
                 <div class="nav-logo">
-                    <a href="index.php"><img src="images/tvu-logo.png" alt="TVU Logo" class="logo"></a>
+                    <a href="index.php" aria-label="Trang chủ">
+                        <img src="images/tvu-logo.png" alt="Logo Trường Đại học Trà Vinh" class="logo">
+                    </a>
                     <div class="system-name">
                         <h1>HỆ THỐNG MƯỢN TRẢ THIẾT BỊ</h1>
                         <span>Trường Đại học Trà Vinh</span>
@@ -29,12 +85,37 @@
                 <div class="nav-menu">
                     <a href="index.php" class="nav-link">Trang chủ</a>
                     <a href="about.php" class="nav-link active">Giới thiệu</a>
-                    <a href="services.php" class="nav-link">Dịch vụ</a>
+                    <a href="equipment.php" class="nav-link">Thiết bị</a>
+                    <a href="regulations.php" class="nav-link">Quy định & Hướng dẫn</a>
                     <a href="contact.php" class="nav-link">Liên hệ</a>
+                    <?php if ($isLoggedIn): ?>
+                        <a href="dashboard.php" class="nav-link">Dashboard</a>
+                    <?php endif; ?>
                 </div>
                 <div class="nav-auth">
-                    <a href="login.php" class="btn-login"><i class="fas fa-sign-in-alt"></i> Đăng nhập</a>
-                    <a href="register.php" class="btn-register"><i class="fas fa-user-plus"></i> Đăng ký</a>
+                    <?php if ($isLoggedIn && isset($userData)): ?>
+                        <!-- User đã đăng nhập -->
+                        <div class="user-info-box">
+                            <div class="user-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="user-details">
+                                <span class="user-name"><?php echo htmlspecialchars($userData['HoTen']); ?></span>
+                                <span class="user-role"><?php echo htmlspecialchars($userData['TenVaiTro'] ?? 'Người dùng'); ?></span>
+                            </div>
+                        </div>
+                        <a href="logout.php" class="btn-login">
+                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                        </a>
+                    <?php else: ?>
+                        <!-- User chưa đăng nhập -->
+                        <a href="login.php" class="btn-login">
+                            <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                        </a>
+                        <a href="register.php" class="btn-register">
+                            <i class="fas fa-user-plus"></i> Đăng ký
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
         </nav>

@@ -8,14 +8,12 @@
  * @date 2024
  */
 
+// Hiển thị lỗi để debug
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // Bắt đầu session để quản lý người dùng
 session_start();
-
-// Cấu hình cơ sở dữ liệu (giả lập - trong thực tế nên dùng file config riêng)
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'equipment_management');
-define('DB_USER', 'root');
-define('DB_PASS', '');
 
 /**
  * Mock Equipment Database
@@ -134,8 +132,11 @@ $categories = array_unique(array_column($allEquipment, 'category'));
 
 // Kiểm tra trạng thái đăng nhập
 $isLoggedIn = isset($_SESSION['user_id']);
-$userName = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : '';
-$userRole = isset($_SESSION['user_role']) ? $_SESSION['user_role'] : '';
+$userData = null;
+if ($isLoggedIn) {
+    require_once __DIR__ . '/../includes/user.php';
+    $userData = getUserInfo($_SESSION['user_id']);
+}
 
 // Thống kê hệ thống
 $stats = [
@@ -157,7 +158,7 @@ $stats = [
     <title>HỆ THỐNG MƯỢN TRẢ THIẾT BỊ GIẢNG DẠY - ĐH Trà Vinh</title>
     
     <!-- CSS Files -->
-    <link rel="stylesheet" href="css/styleAbout.css">
+    <link rel="stylesheet" href="css/styleAbout.css?v=<?php echo time(); ?>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
@@ -582,6 +583,45 @@ $stats = [
                 display: none;
             }
         }
+        
+        /* User info box styles */
+        .user-info-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #4169E1 0%, #1e40af 100%);
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 2px 6px rgba(65, 105, 225, 0.25);
+            margin-right: 0.75rem;
+        }
+        .user-info-box .user-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: white;
+            color: #4169E1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .user-info-box .user-details {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.15;
+        }
+        .user-info-box .user-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .user-info-box .user-role {
+            font-size: 0.7rem;
+            opacity: 0.85;
+        }
     </style>
 </head>
 <body>
@@ -604,23 +644,35 @@ $stats = [
                 <div class="nav-menu" role="menubar">
                     <a href="index.php" class="nav-link active" aria-current="page" role="menuitem">Trang chủ</a>
                     <a href="about.php" class="nav-link" role="menuitem">Giới thiệu</a>
-                    <a href="services.php" class="nav-link" role="menuitem">Dịch vụ</a>
+                    <a href="equipment.php" class="nav-link" role="menuitem">Thiết bị</a>
+                    <a href="regulations.php" class="nav-link" role="menuitem">Quy định & Hướng dẫn</a>
                     <a href="contact.php" class="nav-link" role="menuitem">Liên hệ</a>
+                    <?php if ($isLoggedIn): ?>
+                        <a href="dashboard.php" class="nav-link" role="menuitem">Dashboard</a>
+                    <?php endif; ?>
                 </div>
                 <div class="nav-auth">
-                    <?php if (!$isLoggedIn): ?>
+                    <?php if ($isLoggedIn && isset($userData)): ?>
+                        <!-- User đã đăng nhập -->
+                        <div class="user-info-box">
+                            <div class="user-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="user-details">
+                                <span class="user-name"><?php echo htmlspecialchars($userData['HoTen']); ?></span>
+                                <span class="user-role"><?php echo htmlspecialchars($userData['TenVaiTro'] ?? 'Người dùng'); ?></span>
+                            </div>
+                        </div>
+                        <a href="logout.php" class="btn-login" aria-label="Đăng xuất">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Đăng xuất
+                        </a>
+                    <?php else: ?>
+                        <!-- User chưa đăng nhập -->
                         <a href="login.php" class="btn-login" aria-label="Đăng nhập vào hệ thống">
                             <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Đăng nhập
                         </a>
                         <a href="register.php" class="btn-register" aria-label="Đăng ký tài khoản mới">
                             <i class="fas fa-user-plus" aria-hidden="true"></i> Đăng ký
-                        </a>
-                    <?php else: ?>
-                        <a href="dashboard.php" class="btn-login" aria-label="Đi đến trang quản lý">
-                            <i class="fas fa-tachometer-alt" aria-hidden="true"></i> Dashboard
-                        </a>
-                        <a href="logout.php" class="btn-register" aria-label="Đăng xuất">
-                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Đăng xuất
                         </a>
                     <?php endif; ?>
                 </div>
@@ -1051,7 +1103,8 @@ $stats = [
                     <ul role="list">
                         <li><a href="index.php">Trang chủ</a></li>
                         <li><a href="about.php">Giới thiệu</a></li>
-                        <li><a href="services.php">Dịch vụ</a></li>
+                        <li><a href="equipment.php">Thiết bị</a></li>
+                        <li><a href="regulations.php">Quy định & Hướng dẫn</a></li>
                         <li><a href="contact.php">Liên hệ</a></li>
                     </ul>
                 </div>
@@ -1059,9 +1112,9 @@ $stats = [
                     <h4>Dịch vụ</h4>
                     <ul role="list">
                         <li><a href="equipment.php">Mượn thiết bị</a></li>
-                        <li><a href="search.php">Tra cứu thiết bị</a></li>
-                        <li><a href="guidelines.php">Hướng dẫn sử dụng</a></li>
-                        <li><a href="rules.php">Quy định mượn trả</a></li>
+                        <li><a href="equipment.php">Tra cứu thiết bị</a></li>
+                        <li><a href="regulations.php">Hướng dẫn sử dụng</a></li>
+                        <li><a href="regulations.php">Quy định mượn trả</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">

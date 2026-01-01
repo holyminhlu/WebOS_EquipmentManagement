@@ -31,8 +31,10 @@ function getDBConnection() {
         die("Lỗi kết nối cơ sở dữ liệu: " . $connection->connect_error);
     }
     
-    // Thiết lập charset
+    // Thiết lập charset UTF-8
     $connection->set_charset(DB_CHARSET);
+    $connection->query("SET NAMES 'utf8mb4'");
+    $connection->query("SET CHARACTER SET utf8mb4");
     
     return $connection;
 }

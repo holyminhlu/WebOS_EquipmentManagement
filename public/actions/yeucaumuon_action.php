@@ -23,7 +23,18 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user = getUserInfo($_SESSION['user_id']);
-if (!$user || (int)$user['MaVaiTro'] !== 1) {
+
+$isAdmin = false;
+if ($user && isset($user['MaVaiTro']) && (int)$user['MaVaiTro'] === 1) {
+    $isAdmin = true;
+} elseif ($user && !empty($user['TenVaiTro'])) {
+    $tenVaiTro = mb_strtolower(trim((string)$user['TenVaiTro']), 'UTF-8');
+    if ($tenVaiTro === 'admin' || $tenVaiTro === 'quản trị' || $tenVaiTro === 'quan tri' || str_contains($tenVaiTro, 'admin')) {
+        $isAdmin = true;
+    }
+}
+
+if (!$user || !$isAdmin) {
     // not an admin
     header('Location: ../dashboard.php');
     exit;
@@ -62,7 +73,7 @@ $maPhieu = 'PM' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
 $soPhieu = 'SP' . str_pad($nextNum, 3, '0', STR_PAD_LEFT); // Số phiếu uses SP### prefix
 
 $ngayPhat = date('Y-m-d H:i:s');
-$ngayPhaiTra = $yc['NgayDuKienKetThuc'] ?? null;
+$ngayPhaiTra = $yc['ThoiGianKetThuc'] ?? ($yc['NgayDuKienKetThuc'] ?? null);
 $trangThai = 'Đang mượn';
 
 // Insert into phieumuon (use a minimal column set that is expected to exist)
@@ -76,22 +87,50 @@ if ($insertResult === false) {
 }
 
 // After creating PhieuMuon, create at least one ChiTietMuon row
-// Strategy: pick one available device (MaTrangThai = 1) as default and insert SoLuong = 1
-$available = dbQueryOne("SELECT MaThietBi FROM `thietbi` WHERE IsDeleted = 0 AND MaTrangThai = 1 LIMIT 1");
-if ($available && !empty($available['MaThietBi'])) {
-    // generate MaChiTiet CT###
-    $lastCt = dbQueryOne("SELECT MaChiTiet FROM `chitietmuon` ORDER BY MaChiTiet DESC LIMIT 1");
-    $nextCtNum = 1;
-    if ($lastCt && !empty($lastCt['MaChiTiet']) && preg_match('/(\d+)$/', $lastCt['MaChiTiet'], $mct)) {
-        $nextCtNum = intval($mct[1]) + 1;
+// Strategy: create ChiTietMuon for all requested devices from YeuCauMuon.GhiChu
+// Format stored by create_yeucaumuon.php: "DS_TB:TB001,TB002"
+$requestedIds = [];
+if (!empty($yc['GhiChu']) && preg_match('/DS_TB:([^\n\r]+)/', $yc['GhiChu'], $mList)) {
+    $raw = trim($mList[1]);
+    if ($raw !== '') {
+        $requestedIds = array_values(array_filter(array_map('trim', explode(',', $raw))));
     }
-    // MaChiTiet format: CTM###
-    $maChiTiet = 'CTM' . str_pad($nextCtNum, 3, '0', STR_PAD_LEFT);
+}
 
-    // Insert into chitietmuon
+// Fallback: if none stored, pick one available
+if (empty($requestedIds)) {
+    $fallback = dbQueryOne("SELECT MaThietBi FROM `thietbi` WHERE IsDeleted = 0 AND MaTrangThai = 1 LIMIT 1");
+    if ($fallback && !empty($fallback['MaThietBi'])) {
+        $requestedIds = [$fallback['MaThietBi']];
+    }
+}
+
+// Validate requested devices are available at approval time
+$validIds = [];
+if (!empty($requestedIds)) {
+    $placeholders = implode(',', array_fill(0, count($requestedIds), '?'));
+    $rows = dbQuery("SELECT MaThietBi FROM `thietbi` WHERE IsDeleted = 0 AND MaTrangThai = 1 AND MaThietBi IN ($placeholders)", $requestedIds);
+    foreach ($rows as $r) {
+        $validIds[] = $r['MaThietBi'];
+    }
+}
+
+// Generate base CTM number once
+$lastCt = dbQueryOne("SELECT MaChiTiet FROM `chitietmuon` ORDER BY MaChiTiet DESC LIMIT 1");
+$nextCtNum = 1;
+if ($lastCt && !empty($lastCt['MaChiTiet']) && preg_match('/(\d+)$/', $lastCt['MaChiTiet'], $mct)) {
+    $nextCtNum = intval($mct[1]) + 1;
+}
+
+foreach ($validIds as $deviceId) {
+    $maChiTiet = 'CTM' . str_pad($nextCtNum, 3, '0', STR_PAD_LEFT);
+    $nextCtNum++;
+
     $sqlCt = "INSERT INTO `chitietmuon` (MaChiTiet, MaPhieu, MaThietBi, SoLuong, TinhTrangLucMuon, GhiChu, IsDeleted) VALUES (?,?,?,?,?,?,0)";
-    $ctInsert = dbExecute($sqlCt, [$maChiTiet, $maPhieu, $available['MaThietBi'], 1, 'Tốt', 'Tạo tự động khi duyệt yêu cầu']);
-    // Note: if insert fails we continue; admin can adjust later
+    dbExecute($sqlCt, [$maChiTiet, $maPhieu, $deviceId, 1, 'Tốt', 'Tạo khi duyệt yêu cầu']);
+
+    // Update device status to borrowed (MaTrangThai = 2)
+    dbExecute("UPDATE `thietbi` SET MaTrangThai = 2 WHERE MaThietBi = ?", [$deviceId]);
 }
 
 // Update yeucaumuon: mark as approved and set approver + date (if columns exist)

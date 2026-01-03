@@ -108,6 +108,28 @@ if ($isLoggedIn) {
             margin-bottom: 2rem;
             box-shadow: var(--shadow);
             border-left: 5px solid var(--primary-color);
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        .regulation-card:nth-child(1) { animation-delay: 0.1s; }
+        .regulation-card:nth-child(2) { animation-delay: 0.2s; }
+        .regulation-card:nth-child(3) { animation-delay: 0.3s; }
+        .regulation-card:nth-child(4) { animation-delay: 0.4s; }
+        .regulation-card:nth-child(5) { animation-delay: 0.5s; }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .regulation-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
         }
         
         .regulation-card h2 {
@@ -175,6 +197,29 @@ if ($isLoggedIn) {
             padding: 1.5rem;
             border-radius: var(--border-radius);
             transition: var(--transition);
+            opacity: 0;
+            transform: translateX(-30px);
+            animation: slideInLeft 0.5s ease forwards;
+        }
+        
+        .process-step:nth-child(1) { animation-delay: 0.1s; }
+        .process-step:nth-child(2) { animation-delay: 0.2s; }
+        .process-step:nth-child(3) { animation-delay: 0.3s; }
+        .process-step:nth-child(4) { animation-delay: 0.4s; }
+        .process-step:nth-child(5) { animation-delay: 0.5s; }
+        .process-step:nth-child(6) { animation-delay: 0.6s; }
+        
+        @keyframes slideInLeft {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .process-step:hover {
+            transform: translateX(10px);
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         
         .process-step:hover {
@@ -183,7 +228,7 @@ if ($isLoggedIn) {
         }
         
         .step-number {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             color: white;
             width: 50px;
             height: 50px;
@@ -194,6 +239,13 @@ if ($isLoggedIn) {
             font-size: 1.5rem;
             font-weight: 700;
             flex-shrink: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(65, 105, 225, 0.3);
+        }
+        
+        .process-step:hover .step-number {
+            transform: rotate(360deg) scale(1.15);
+            box-shadow: 0 6px 20px rgba(65, 105, 225, 0.5);
         }
         
         .step-content h4 {
@@ -208,36 +260,81 @@ if ($isLoggedIn) {
         
         .fine-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             margin: 1.5rem 0;
             background: white;
             box-shadow: var(--shadow);
             border-radius: var(--border-radius);
             overflow: hidden;
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
         }
         
         .fine-table thead {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             color: white;
         }
         
-        .fine-table th, .fine-table td {
-            padding: 1rem;
+        .fine-table th {
+            padding: 1.2rem 1.5rem;
             text-align: left;
-            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 0.03em;
+            border-bottom: none;
+        }
+        
+        .fine-table td {
+            padding: 1.5rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid #f3f4f6;
+            color: var(--text-dark);
+            line-height: 1.8;
+            vertical-align: top;
+        }
+        
+        .fine-table tbody tr {
+            transition: all 0.3s ease;
         }
         
         .fine-table tbody tr:hover {
-            background: var(--bg-light);
+            background: #f9fafb;
+        }
+        
+        .fine-table tbody tr:last-child td {
+            border-bottom: none;
         }
         
         .contact-cta {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             color: white;
             padding: 3rem;
             border-radius: var(--border-radius);
             text-align: center;
             margin-top: 3rem;
+            opacity: 0;
+            transform: scale(0.9);
+            animation: scaleIn 0.6s ease forwards 0.8s;
+        }
+        
+        @keyframes scaleIn {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .contact-cta:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(65, 105, 225, 0.4);
+            transition: all 0.3s ease;
         }
         
         .contact-cta h3 {
@@ -259,7 +356,27 @@ if ($isLoggedIn) {
             text-decoration: none;
             font-weight: 600;
             display: inline-block;
-            transition: var(--transition);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .contact-cta .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(65, 105, 225, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .contact-cta .btn:hover::before {
+            width: 300px;
+            height: 300px;
         }
         
         .contact-cta .btn:hover {

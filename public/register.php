@@ -64,29 +64,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng ký - Hệ thống mượn trả thiết bị</title>
-    <link rel="stylesheet" href="css/styleRegister.css">
+    <link rel="stylesheet" href="css/styleRegister.css?v=<?php echo time(); ?>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <header class="header">
-        <nav class="navbar">
+    <header class="header" role="banner">
+        <nav class="navbar" role="navigation" aria-label="Điều hướng chính">
             <div class="nav-container">
                 <div class="nav-logo">
-                    <a href="index.php"><img src="images/tvu-logo.png" alt="TVU Logo" class="logo"></a>
+                    <a href="index.php" aria-label="Trang chủ - Đại học Trà Vinh">
+                        <img src="images/tvu-logo.png" alt="Logo Trường Đại học Trà Vinh" class="logo">
+                    </a>
                     <div class="system-name">
                         <h1>HỆ THỐNG MƯỢN TRẢ THIẾT BỊ</h1>
                         <span>Trường Đại học Trà Vinh</span>
                     </div>
                 </div>
-                <div class="nav-menu">
-                    <a href="index.php" class="nav-link">Trang chủ</a>
-                    <a href="about.php" class="nav-link">Giới thiệu</a>
-                    <a href="regulations.php" class="nav-link">Quy định & Hướng dẫn</a>
-                    <a href="contact.php" class="nav-link">Liên hệ</a>
+                <div class="nav-menu" role="menubar">
+                    <a href="index.php" class="nav-link" role="menuitem">Trang chủ</a>
+                    <a href="about.php" class="nav-link" role="menuitem">Giới thiệu</a>
+                    <a href="equipment.php" class="nav-link" role="menuitem">Thiết bị</a>
+                    <a href="regulations.php" class="nav-link" role="menuitem">Quy định & Hướng dẫn</a>
+                    <a href="contact.php" class="nav-link" role="menuitem">Liên hệ</a>
                 </div>
                 <div class="nav-auth">
-                    <a href="login.php" class="btn-login"><i class="fas fa-sign-in-alt"></i> Đăng nhập</a>
-                    <a href="register.php" class="btn-register"><i class="fas fa-user-plus"></i> Đăng ký</a>
+                    <a href="login.php" class="btn-login" aria-label="Đăng nhập vào hệ thống">
+                        <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Đăng nhập
+                    </a>
+                    <a href="register.php" class="btn-register" aria-label="Đăng ký tài khoản mới">
+                        <i class="fas fa-user-plus" aria-hidden="true"></i> Đăng ký
+                    </a>
                 </div>
             </div>
         </nav>

@@ -35,8 +35,8 @@ function getUserPhieuMuon($maNguoiDung) {
     $sql = "SELECT pm.*, 
                    nd_phat.HoTen as TenNguoiPhat,
                    ycm.MucDich,
-                   ycm.NgayDuKienBatDau,
-                   ycm.NgayDuKienKetThuc
+                 ycm.ThoiGianBatDau,
+                 ycm.ThoiGianKetThuc
             FROM `phieumuon` pm
             LEFT JOIN `nguoidung` nd_phat ON pm.NguoiPhatThietBi = nd_phat.MaNguoiDung
             LEFT JOIN `yeucaumuon` ycm ON pm.MaYeuCau = ycm.MaYeuCau

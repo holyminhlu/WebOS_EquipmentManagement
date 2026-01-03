@@ -168,7 +168,7 @@ $stats = [
         .hero-image-img {
             width: 100%;
             height: auto;
-            max-width: 86%;  --Điều chỉnh kích thước của Ảnh menu
+            max-width: 86%; /* Điều chỉnh kích thước của ảnh menu */
             object-fit: contain;
             border-radius: var(--border-radius);
             animation: fadeInUp 0.8s ease-out;
@@ -695,7 +695,7 @@ $stats = [
                             </a>
                         <?php else: ?>
                             <a href="equipment.php" class="btn-primary" aria-label="Xem danh sách thiết bị">
-                                <i class="fas fa-search" aria-hidden="true"></i> Tìm thiết bị
+                                <i class="fas fa-search" aria-hidden="true"></i> Đặt thiết bị ngay
                             </a>
                         <?php endif; ?>
                         <a href="#features" class="btn-secondary" aria-label="Tìm hiểu thêm về hệ thống">
@@ -710,134 +710,6 @@ $stats = [
                 </div>
             </div>
         </section>
-
-        <!-- Search Section -->
-        <section class="search-section" aria-labelledby="search-title">
-            <div class="search-container">
-                <h2 id="search-title" class="sr-only">Tìm kiếm thiết bị</h2>
-                <form class="search-form" method="GET" action="index.php" role="search" aria-label="Tìm kiếm thiết bị">
-                    <div class="search-input-group">
-                        <label for="search-input" class="sr-only">Nhập từ khóa tìm kiếm</label>
-                        <input 
-                            type="search" 
-                            id="search-input"
-                            name="search" 
-                            class="search-input" 
-                            placeholder="Tìm kiếm thiết bị (ví dụ: máy chiếu, laptop, micro...)"
-                            value="<?php echo htmlspecialchars($searchQuery); ?>"
-                            aria-label="Tìm kiếm thiết bị"
-                            autocomplete="off"
-                        >
-                    </div>
-                    <div>
-                        <label for="category-filter" class="sr-only">Lọc theo danh mục</label>
-                        <select 
-                            id="category-filter"
-                            name="category" 
-                            class="category-select"
-                            aria-label="Lọc theo danh mục thiết bị"
-                        >
-                            <option value="">Tất cả danh mục</option>
-                            <?php foreach ($categories as $category): ?>
-                                <option value="<?php echo htmlspecialchars($category); ?>" 
-                                    <?php echo $categoryFilter === $category ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($category); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <button type="submit" class="search-btn-submit" aria-label="Thực hiện tìm kiếm">
-                        <i class="fas fa-search" aria-hidden="true"></i> Tìm kiếm
-                    </button>
-                </form>
-            </div>
-        </section>
-
-        <!-- Equipment List Section -->
-        <?php if (!empty($equipmentList)): ?>
-        <section class="features-section" aria-labelledby="equipment-title">
-            <div class="container">
-                <div class="section-header">
-                    <h2 id="equipment-title">
-                        <?php if ($searchQuery || $categoryFilter): ?>
-                            Kết quả tìm kiếm (<?php echo count($equipmentList); ?> thiết bị)
-                        <?php else: ?>
-                            Thiết bị nổi bật
-                        <?php endif; ?>
-                    </h2>
-                    <p>Những thiết bị được sử dụng phổ biến nhất</p>
-                </div>
-                <div class="equipment-grid" role="list">
-                    <?php foreach ($equipmentList as $equipment): ?>
-                        <article class="equipment-card" role="listitem">
-                            <div class="equipment-image">
-                                <?php if (file_exists($equipment['image'])): ?>
-                                    <img src="<?php echo htmlspecialchars($equipment['image']); ?>" 
-                                         alt="<?php echo htmlspecialchars($equipment['name']); ?>">
-                                <?php else: ?>
-                                    <div class="equipment-icon">
-                                        <i class="<?php echo htmlspecialchars($equipment['icon']); ?>" aria-hidden="true"></i>
-                                    </div>
-                                <?php endif; ?>
-                                <span class="equipment-status <?php echo htmlspecialchars($equipment['status']); ?>" 
-                                      aria-label="Trạng thái: <?php echo $equipment['status'] === 'available' ? 'Có sẵn' : ($equipment['status'] === 'limited' ? 'Số lượng ít' : 'Không có sẵn'); ?>">
-                                    <?php 
-                                    echo $equipment['status'] === 'available' ? 'Có sẵn' : 
-                                         ($equipment['status'] === 'limited' ? 'Số lượng ít' : 'Không có sẵn'); 
-                                    ?>
-                                </span>
-                            </div>
-                            <div class="equipment-info">
-                                <div class="equipment-category"><?php echo htmlspecialchars($equipment['category']); ?></div>
-                                <h3><?php echo htmlspecialchars($equipment['name']); ?></h3>
-                                <p><?php echo htmlspecialchars($equipment['description']); ?></p>
-                                <div class="equipment-meta">
-                                    <span>
-                                        <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
-                                        <?php echo htmlspecialchars($equipment['location']); ?>
-                                    </span>
-                                    <span>
-                                        <i class="fas fa-cube" aria-hidden="true"></i>
-                                        <?php echo $equipment['available']; ?>/<?php echo $equipment['total']; ?> có sẵn
-                                    </span>
-                                </div>
-                                <div class="equipment-actions">
-                                    <a href="equipment-detail.php?id=<?php echo $equipment['id']; ?>" 
-                                       class="btn-detail" 
-                                       aria-label="Xem chi tiết <?php echo htmlspecialchars($equipment['name']); ?>">
-                                        <i class="fas fa-eye" aria-hidden="true"></i> Chi tiết
-                                    </a>
-                                    <?php if ($equipment['available'] > 0): ?>
-                                        <a href="borrow.php?equipment_id=<?php echo $equipment['id']; ?>" 
-                                           class="btn-borrow" 
-                                           aria-label="Mượn <?php echo htmlspecialchars($equipment['name']); ?>">
-                                            <i class="fas fa-cart-plus" aria-hidden="true"></i> Đặt mượn
-                                        </a>
-                                    <?php else: ?>
-                                        <button class="btn-borrow" disabled aria-label="Thiết bị không có sẵn">
-                                            <i class="fas fa-ban" aria-hidden="true"></i> Hết hàng
-                                        </button>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </article>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </section>
-        <?php elseif ($searchQuery || $categoryFilter): ?>
-        <section class="features-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Không tìm thấy kết quả</h2>
-                    <p>Không có thiết bị nào phù hợp với tiêu chí tìm kiếm của bạn.</p>
-                    <a href="index.php" class="btn-primary" style="margin-top: 1rem; display: inline-block;">
-                        <i class="fas fa-arrow-left" aria-hidden="true"></i> Xem tất cả thiết bị
-                    </a>
-                </div>
-            </div>
-        </section>
-        <?php endif; ?>
 
         <!-- Quick Links Section -->
         <section class="quick-links-section" aria-labelledby="quick-links-title">
@@ -855,7 +727,7 @@ $stats = [
                         <p>Xem tất cả thiết bị có sẵn</p>
                     </a>
                     <?php if ($isLoggedIn): ?>
-                        <a href="my-borrows.php" class="quick-link-card" role="listitem" aria-label="Xem lịch sử mượn thiết bị">
+                        <a href="dashboard.php" class="quick-link-card" role="listitem" aria-label="Xem lịch sử mượn thiết bị">
                             <div class="quick-link-icon">
                                 <i class="fas fa-history" aria-hidden="true"></i>
                             </div>
@@ -885,7 +757,7 @@ $stats = [
                             <p>Truy cập tài khoản của bạn</p>
                         </a>
                     <?php endif; ?>
-                    <a href="guidelines.php" class="quick-link-card" role="listitem" aria-label="Xem hướng dẫn sử dụng">
+                    <a href="regulations.php" class="quick-link-card" role="listitem" aria-label="Xem hướng dẫn sử dụng">
                         <div class="quick-link-icon">
                             <i class="fas fa-book" aria-hidden="true"></i>
                         </div>
@@ -1174,28 +1046,6 @@ $stats = [
                 });
             });
             
-            // Auto-focus search input on page load if search query exists
-            <?php if ($searchQuery): ?>
-            const searchInput = document.getElementById('search-input');
-            if (searchInput) {
-                searchInput.focus();
-                searchInput.select();
-            }
-            <?php endif; ?>
-            
-            // Form validation
-            const searchForm = document.querySelector('.search-form');
-            if (searchForm) {
-                searchForm.addEventListener('submit', function(e) {
-                    const searchInput = document.getElementById('search-input');
-                    const categorySelect = document.getElementById('category-filter');
-                    
-                    // Allow form submission if either search or category is selected
-                    if (!searchInput.value.trim() && !categorySelect.value) {
-                        // Optional: show message or allow empty search to show all
-                    }
-                });
-            }
             
             // Announce dynamic content changes to screen readers
             const observer = new MutationObserver(function(mutations) {

@@ -6,6 +6,7 @@
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../includes/audit.php';
 
 // Kiểm tra đăng nhập
 if (!isset($_SESSION['user_id'])) {
@@ -59,9 +60,14 @@ try {
         exit;
     }
     
+    $before = $yeuCau;
+
     // Cập nhật trạng thái thành "Đã hủy"
     $sql = "UPDATE yeucaumuon SET TrangThai = 'Đã hủy' WHERE MaYeuCau = ?";
     dbExecute($sql, [$maYeuCau]);
+
+    $after = dbQueryOne("SELECT * FROM yeucaumuon WHERE MaYeuCau = ? AND IsDeleted = 0 LIMIT 1", [$maYeuCau]);
+    auditLog('YeuCauMuon', $maYeuCau, 'CANCEL', $before, $after);
     
     // Tạo thông báo
     $lastTb = dbQueryOne("SELECT MaThongBao FROM thongbao ORDER BY MaThongBao DESC LIMIT 1");
@@ -90,3 +96,4 @@ try {
     ]);
 }
 ?>
+

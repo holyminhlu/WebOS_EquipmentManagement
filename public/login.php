@@ -10,7 +10,11 @@ session_start();
 
 // Nếu đã đăng nhập, chuyển đến dashboard
 if (isset($_SESSION['user_id'])) {
-    header('Location: dashboard.php');
+    if (isset($_SESSION['user_role_id']) && (int)$_SESSION['user_role_id'] === 1101) {
+        header('Location: system_admin.php');
+    } else {
+        header('Location: dashboard.php');
+    }
     exit;
 }
 
@@ -45,8 +49,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                 setcookie('remember_user', $user['MaNguoiDung'], time() + (30 * 24 * 60 * 60), '/');
             }
             
-            // Chuyển đến dashboard
-            header('Location: dashboard.php');
+            // Chuyển đến đúng giao diện theo quyền
+            if ((int)$_SESSION['user_role_id'] === 1101) {
+                header('Location: system_admin.php');
+            } else {
+                header('Location: dashboard.php');
+            }
             exit;
         } else {
             $error = 'Tên đăng nhập/Email hoặc mật khẩu không đúng';

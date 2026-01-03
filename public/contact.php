@@ -900,11 +900,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
             overflow: hidden;
             border: 2px solid transparent;
             transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s ease forwards;
+        }
+        
+        .faq-item:nth-child(1) { animation-delay: 0.1s; }
+        .faq-item:nth-child(2) { animation-delay: 0.2s; }
+        .faq-item:nth-child(3) { animation-delay: 0.3s; }
+        .faq-item:nth-child(4) { animation-delay: 0.4s; }
+        .faq-item:nth-child(5) { animation-delay: 0.5s; }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .faq-item:hover {
             border-color: var(--primary-color);
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transform: translateX(8px);
         }
         
         .faq-question {
@@ -919,6 +936,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
             transition: all 0.3s ease;
             user-select: none;
             background: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .faq-question::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: linear-gradient(to bottom, var(--primary-color), #667eea);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-question:hover::before {
+            transform: scaleY(1);
         }
         
         .faq-question:hover {
@@ -927,7 +962,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
         }
         
         .faq-question i {
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             color: var(--primary-color);
             font-size: 1.2rem;
         }
@@ -937,6 +972,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
             color: var(--primary-color);
         }
         
+        .faq-item.active .faq-question::before {
+            transform: scaleY(1);
+        }
+        
         .faq-item.active .faq-question i {
             transform: rotate(180deg);
         }
@@ -944,11 +983,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
         .faq-answer {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+            background: linear-gradient(to bottom, rgba(102, 126, 234, 0.03), transparent);
         }
         
         .faq-item.active .faq-answer {
             max-height: 600px;
+            animation: slideDown 0.4s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .faq-answer p,
@@ -1264,7 +1316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
                                 <i class="fas fa-envelope"></i>
                                 <span>Email</span>
                             </a>
-                            <a href="https://zalo.me/0294385524" target="_blank" class="quick-btn zalo">
+                            <a href="https://zalo.me/0365530100" target="_blank" class="quick-btn zalo">
                                 <i class="fas fa-comment"></i>
                                 <span>Zalo</span>
                             </a>

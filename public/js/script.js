@@ -124,16 +124,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
 
-    // Xử lý tìm kiếm
+    // Xử lý tìm kiếm (nếu trang có search UI)
     const searchInput = document.querySelector('.search-box input');
     const searchButton = document.querySelector('.search-btn');
 
-    searchButton.addEventListener('click', performSearch);
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            performSearch();
-        }
-    });
+    if (searchButton && searchInput) {
+        searchButton.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    }
 
     function performSearch() {
         const query = searchInput.value.trim();

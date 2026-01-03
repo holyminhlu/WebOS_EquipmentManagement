@@ -381,6 +381,40 @@ body {
     margin-top: 1rem;
 }
 
+/* Form controls (used in dashboard modals: đặt trước / phạt / bảo trì) */
+.reserve-form select,
+.reserve-form textarea,
+.reserve-form input[type="text"],
+.reserve-form input[type="number"],
+.reserve-form input[type="datetime-local"] {
+    width: 100%;
+    padding: 0.65rem 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-white);
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.25;
+    box-sizing: border-box;
+    transition: var(--transition);
+}
+
+.reserve-form textarea {
+    resize: vertical;
+    min-height: 110px;
+}
+
+.reserve-form select:focus,
+.reserve-form textarea:focus,
+.reserve-form input[type="text"]:focus,
+.reserve-form input[type="number"]:focus,
+.reserve-form input[type="datetime-local"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.12);
+}
+
 .btn {
     padding: 0.5rem 1rem;
     border: none;
@@ -411,6 +445,32 @@ body {
 
 .btn-secondary:hover {
     background-color: var(--text-color);
+}
+
+/* Semantic buttons (used in dashboard tables) */
+.btn-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.btn-success:hover {
+    filter: brightness(0.95);
+}
+
+.btn-danger {
+    background-color: var(--error-color);
+    color: white;
+}
+
+.btn-danger:hover {
+    filter: brightness(0.95);
+}
+
+.btn:disabled,
+.btn[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    filter: none;
 }
 
 /* Money Format */

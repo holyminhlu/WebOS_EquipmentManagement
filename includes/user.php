@@ -82,6 +82,7 @@ function getUserYeuCauMuon($maNguoiDung) {
             LEFT JOIN `nguoidung` nd_duyet ON ycm.NguoiDuyet = nd_duyet.MaNguoiDung
             WHERE ycm.MaNguoiYeuCau = ?
             AND ycm.IsDeleted = 0
+            AND ycm.MaYeuCau NOT LIKE 'DT%'
             ORDER BY ycm.NgayGui DESC";
     
     return dbQuery($sql, [$maNguoiDung]);
@@ -100,10 +101,11 @@ function getAllYeuCauMuon($limit = 0) {
             ORDER BY ycm.NgayGui DESC";
 
     // Remove dummy reference; keep query simple but maintain compatibility
-    $sql = "SELECT ycm.*, nd_duyet.HoTen as TenNguoiDuyet
+        $sql = "SELECT ycm.*, nd_duyet.HoTen as TenNguoiDuyet
             FROM `yeucaumuon` ycm
             LEFT JOIN `nguoidung` nd_duyet ON ycm.NguoiDuyet = nd_duyet.MaNguoiDung
             WHERE ycm.IsDeleted = 0
+            AND ycm.MaYeuCau NOT LIKE 'DT%'
             ORDER BY ycm.NgayGui DESC";
 
     if ($limit > 0) {
@@ -175,7 +177,9 @@ function getAllDatTruoc($limit = 0) {
  * @param int $limit Số lượng thông báo cần lấy (0 = tất cả)
  * @return array
  */
-function getUserThongBao($maNguoiDung, $limit = 0) {
+function getUserThongBao($maNguoiDung, $limit = 0, $offset = 0) {
+    $offset = (int)$offset;
+    if ($offset < 0) $offset = 0;
     $sql = "SELECT * 
             FROM `thongbao`
             WHERE MaNguoiDung = ?
@@ -183,7 +187,7 @@ function getUserThongBao($maNguoiDung, $limit = 0) {
             ORDER BY NgayGui DESC";
     
     if ($limit > 0) {
-        $sql .= " LIMIT " . (int)$limit;
+        $sql .= " LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
     }
     
     return dbQuery($sql, [$maNguoiDung]);
@@ -195,15 +199,40 @@ function getUserThongBao($maNguoiDung, $limit = 0) {
  * @return array
  */
 function getUserPhieuPhat($maNguoiDung) {
-    $sql = "SELECT pp.*, 
-                   pm.SoPhieu
-            FROM `phieuphat` pp
-            INNER JOIN `phieumuon` pm ON pp.MaPhieu = pm.MaPhieu
-            WHERE pp.MaNguoiDung = ?
-            AND pp.IsDeleted = 0
-            ORDER BY pp.NgayTao DESC";
+        $sql = "SELECT pp.*,
+                                     pm.SoPhieu,
+                                     nd.HoTen AS TenNguoiDung,
+                                     (
+                                                SELECT GROUP_CONCAT(ctm.MaThietBi ORDER BY ctm.MaThietBi SEPARATOR ', ')
+                                                FROM `chitietmuon` ctm
+                                                WHERE ctm.MaPhieu = pp.MaPhieu AND ctm.IsDeleted = 0
+                                     ) AS ThietBi
+                        FROM `phieuphat` pp
+                        INNER JOIN `phieumuon` pm ON pp.MaPhieu = pm.MaPhieu
+                        LEFT JOIN `nguoidung` nd ON pp.MaNguoiDung = nd.MaNguoiDung
+                        WHERE pp.MaNguoiDung = ?
+                            AND pp.IsDeleted = 0
+                        ORDER BY pp.NgayTao DESC";
 
-    return dbQuery($sql, [$maNguoiDung]);
+        return dbQuery($sql, [$maNguoiDung]);
+}
+
+/**
+ * Kiểm tra người dùng có phiếu phạt chưa thanh toán hay không
+ * @param string $maNguoiDung
+ * @return bool
+ */
+function userHasUnpaidPhieuPhat($maNguoiDung) {
+    $row = dbQueryOne(
+        "SELECT COUNT(*) AS cnt
+         FROM `phieuphat`
+         WHERE MaNguoiDung = ?
+           AND IsDeleted = 0
+           AND DaThanhToan = 0",
+        [$maNguoiDung]
+    );
+
+    return ($row && isset($row['cnt'])) ? ((int)$row['cnt'] > 0) : false;
 }
 
 /**
@@ -212,9 +241,17 @@ function getUserPhieuPhat($maNguoiDung) {
  * @return array
  */
 function getAllPhieuPhat($limit = 0) {
-    $sql = "SELECT pp.*, pm.SoPhieu
+    $sql = "SELECT pp.*,
+                   pm.SoPhieu,
+                   nd.HoTen AS TenNguoiDung,
+                   (
+                        SELECT GROUP_CONCAT(ctm.MaThietBi ORDER BY ctm.MaThietBi SEPARATOR ', ')
+                        FROM `chitietmuon` ctm
+                        WHERE ctm.MaPhieu = pp.MaPhieu AND ctm.IsDeleted = 0
+                   ) AS ThietBi
             FROM `phieuphat` pp
             INNER JOIN `phieumuon` pm ON pp.MaPhieu = pm.MaPhieu
+            LEFT JOIN `nguoidung` nd ON pp.MaNguoiDung = nd.MaNguoiDung
             WHERE pp.IsDeleted = 0
             ORDER BY pp.NgayTao DESC";
 

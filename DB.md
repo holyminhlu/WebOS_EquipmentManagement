@@ -22,7 +22,8 @@ CREATE TABLE KhoaPhongBan (
 CREATE TABLE DiaDiem (
     MaDiaDiem INT AUTO_INCREMENT PRIMARY KEY,   
     TenDiaDiem VARCHAR(100) NOT NULL,
-    DiaChi VARCHAR(500),                 
+    DiaChi VARCHAR(500),  
+    Khu VARCHAR(500),               
     NguoiPhuTrach VARCHAR(200),
 
     IsDeleted TINYINT(1) DEFAULT 0 NOT NULL,
@@ -101,8 +102,8 @@ CREATE TABLE YeuCauMuon (
     NgayGui DATETIME DEFAULT CURRENT_TIMESTAMP,        
     TrangThai VARCHAR(50) DEFAULT 'Chờ duyệt',
     MucDich TEXT,                     
-    NgayDuKienBatDau DATETIME,               
-    NgayDuKienKetThuc DATETIME,                
+    ThoiGianDuKienBatDau DATETIME,               
+    ThoiGianDuKienKetThuc DATETIME,                
     NguoiDuyet VARCHAR(20) NULL,                    
     NgayDuyet DATETIME NULL,                 
     GhiChu VARCHAR(500),                      

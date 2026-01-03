@@ -11,6 +11,7 @@ session_start();
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/user.php';
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../includes/audit.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ../dashboard.php');
@@ -55,6 +56,8 @@ if (!$yc) {
     exit;
 }
 
+$beforeYc = $yc;
+
 // If already approved, nothing to do
 if (isset($yc['TrangThai']) && $yc['TrangThai'] === 'Đã duyệt') {
     header('Location: ../dashboard.php');
@@ -85,6 +88,9 @@ if ($insertResult === false) {
     header('Location: ../dashboard.php');
     exit;
 }
+
+$afterPm = dbQueryOne("SELECT * FROM `phieumuon` WHERE MaPhieu = ? LIMIT 1", [$maPhieu]);
+auditLog('PhieuMuon', $maPhieu, 'CREATE', null, $afterPm);
 
 // After creating PhieuMuon, create at least one ChiTietMuon row
 // Strategy: create ChiTietMuon for all requested devices from YeuCauMuon.GhiChu
@@ -129,12 +135,21 @@ foreach ($validIds as $deviceId) {
     $sqlCt = "INSERT INTO `chitietmuon` (MaChiTiet, MaPhieu, MaThietBi, SoLuong, TinhTrangLucMuon, GhiChu, IsDeleted) VALUES (?,?,?,?,?,?,0)";
     dbExecute($sqlCt, [$maChiTiet, $maPhieu, $deviceId, 1, 'Tốt', 'Tạo khi duyệt yêu cầu']);
 
+    $afterCtm = dbQueryOne("SELECT * FROM `chitietmuon` WHERE MaChiTiet = ? LIMIT 1", [$maChiTiet]);
+    auditLog('ChiTietMuon', $maChiTiet, 'CREATE', null, $afterCtm);
+
     // Update device status to borrowed (MaTrangThai = 2)
+    $beforeTb = dbQueryOne("SELECT * FROM `thietbi` WHERE MaThietBi = ? LIMIT 1", [$deviceId]);
     dbExecute("UPDATE `thietbi` SET MaTrangThai = 2 WHERE MaThietBi = ?", [$deviceId]);
+    $afterTb = dbQueryOne("SELECT * FROM `thietbi` WHERE MaThietBi = ? LIMIT 1", [$deviceId]);
+    auditLog('ThietBi', $deviceId, 'UPDATE', $beforeTb, $afterTb);
 }
 
 // Update yeucaumuon: mark as approved and set approver + date (if columns exist)
 dbExecute("UPDATE `yeucaumuon` SET TrangThai = ?, NguoiDuyet = ?, NgayDuyet = NOW() WHERE MaYeuCau = ?", ['Đã duyệt', $_SESSION['user_id'], $maYeuCau]);
+
+$afterYc = dbQueryOne("SELECT * FROM `yeucaumuon` WHERE MaYeuCau = ? AND IsDeleted = 0 LIMIT 1", [$maYeuCau]);
+auditLog('YeuCauMuon', $maYeuCau, 'APPROVE', $beforeYc, $afterYc);
 
 // Insert a notification for the requester
 $tieuDe = "Yêu cầu {$maYeuCau} đã được duyệt";
@@ -151,3 +166,4 @@ dbExecute("INSERT INTO `thongbao` (MaThongBao, MaNguoiDung, TieuDe, NoiDung, Nga
 
 header('Location: ../dashboard.php');
 exit;
+

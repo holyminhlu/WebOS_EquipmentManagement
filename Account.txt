@@ -1,0 +1,34 @@
+user holyminhlu - 123456
+user nguyenhuuluan - 123456
+admin admin - 12345
+QTVHT holyminhlu1@gmail.com - 123456
+Inactive holyminhlu1 holyminhlu@inactive.com    123456
+
+
+1) Thư viện dùng để vẽ
+
+Mình dùng Chart.js (v4).
+Nó được nhúng ở trang quản trị hệ thống: system_admin.php bằng CDN:
+https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js
+
+2) Nơi vẽ biểu đồ (frontend)
+
+Trong tab “Báo cáo & thống kê” có:
+<canvas id="statsChart"> để Chart.js vẽ lên.
+Input chọn tháng <input type="month" id="statsMonth">
+Khi bạn bấm tab “Báo cáo” hoặc bấm “Xem thống kê”, JS gọi hàm loadMonthlyStats() để:
+fetch('actions/system_admin/stats_monthly.php', ...)
+nhận JSON { labels: [...], series: { borrow: [...], reserve: [...], fine: [...] } }
+gọi new Chart(canvas, { type: 'line', data: {...} })
+
+3) Dữ liệu lấy từ CSDL ở đâu (backend)
+
+API trả dữ liệu là: stats_monthly.php
+File này:
+Nhận POST month dạng YYYY-MM
+Tính start/end của tháng
+Query và GROUP BY theo ngày:
+Mượn: phieumuon.NgayPhat
+Đặt trước: dattruoc.NgayTao
+Phiếu phạt: phieuphat.NgayTao
+Sau đó trả về mảng đủ từ ngày 1 → ngày cuối tháng (ngày nào không có thì = 0) để vẽ line chart không bị “đứt mảng”.

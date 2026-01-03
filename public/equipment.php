@@ -15,6 +15,11 @@ if ($isLoggedIn) {
     $userData = getUserInfo($_SESSION['user_id']);
 }
 
+$hasUnpaidFines = false;
+if ($isLoggedIn) {
+    $hasUnpaidFines = userHasUnpaidPhieuPhat($_SESSION['user_id']);
+}
+
 // Lấy tham số tìm kiếm và lọc
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $loaiThietBi = isset($_GET['loai']) ? trim($_GET['loai']) : '';
@@ -1293,6 +1298,44 @@ if ($defaultKhu !== '') {
     <?php endif; ?>
 
     <script>
+        const UNPAID_FINES_MESSAGE = 'Vui lòng thanh toán tất cả các phiếu phạt trước khi thực hiện thao tác';
+        const HAS_UNPAID_FINES_SNAPSHOT = <?php echo $hasUnpaidFines ? 'true' : 'false'; ?>;
+
+        function showUnpaidFinesPopup() {
+            alert(UNPAID_FINES_MESSAGE);
+        }
+
+        function ensureNoUnpaidFinesThen(next) {
+            // Fast path (page snapshot). Still verify with server to support "pay then borrow" without reload.
+            fetch('actions/check_unpaid_fines.php', { method: 'GET', headers: { 'Accept': 'application/json' } })
+                .then(r => r.json())
+                .then(data => {
+                    if (!data || data.success !== true) {
+                        // If cannot verify, fall back to snapshot
+                        if (HAS_UNPAID_FINES_SNAPSHOT) {
+                            showUnpaidFinesPopup();
+                            return;
+                        }
+                        if (typeof next === 'function') next();
+                        return;
+                    }
+
+                    if (data.hasUnpaid === 1) {
+                        showUnpaidFinesPopup();
+                        return;
+                    }
+
+                    if (typeof next === 'function') next();
+                })
+                .catch(() => {
+                    if (HAS_UNPAID_FINES_SNAPSHOT) {
+                        showUnpaidFinesPopup();
+                        return;
+                    }
+                    if (typeof next === 'function') next();
+                });
+        }
+
         function pad2(n) { return String(n).padStart(2, '0'); }
 
         function toDateTimeLocalValue(dateObj) {
@@ -1546,7 +1589,7 @@ if ($defaultKhu !== '') {
                 alert('Vui lòng chọn ít nhất 1 thiết bị.');
                 return;
             }
-            openBorrowModal();
+            ensureNoUnpaidFinesThen(() => openBorrowModal());
         }
 
         function openReserveModalFromSelection() {
@@ -1555,7 +1598,7 @@ if ($defaultKhu !== '') {
                 alert('Vui lòng chọn ít nhất 1 thiết bị (checkbox "Chọn thiết bị này") để đặt trước.');
                 return;
             }
-            openReserveModalForDevices(devices);
+            ensureNoUnpaidFinesThen(() => openReserveModalForDevices(devices));
         }
 
         function openBorrowModal() {
@@ -1735,6 +1778,9 @@ if ($defaultKhu !== '') {
         function submitReserveRequest(e) {
             e.preventDefault();
 
+            // Block if unpaid fines exist (live check)
+            ensureNoUnpaidFinesThen(() => {
+
             const rawTypes = document.getElementById('reserveMaLoaiThietBi').value.trim();
             const ngayBatDau = document.getElementById('reserveNgayBatDau').value;
             const ngayKetThuc = document.getElementById('reserveNgayKetThuc').value;
@@ -1788,10 +1834,15 @@ if ($defaultKhu !== '') {
                     closeReserveModal();
                     window.location.href = 'dashboard.php';
                 } else {
-                    alert('Lỗi: ' + data.message);
+                    if (data && data.message === UNPAID_FINES_MESSAGE) {
+                        showUnpaidFinesPopup();
+                    } else {
+                        alert('Lỗi: ' + (data && data.message ? data.message : 'Không xác định'));
+                    }
                 }
             })
             .catch(err => alert('Lỗi kết nối: ' + err.message));
+            });
         }
 
         const modalOverlay = document.getElementById('borrowModalOverlay');
@@ -1803,6 +1854,9 @@ if ($defaultKhu !== '') {
 
         function submitBorrowRequest(e) {
             e.preventDefault();
+
+            // Block if unpaid fines exist (live check)
+            ensureNoUnpaidFinesThen(() => {
 
             const selected = getSelectedDevices();
             if (selected.length === 0) {
@@ -1852,10 +1906,15 @@ if ($defaultKhu !== '') {
                     clearBorrowSelection();
                     window.location.reload();
                 } else {
-                    alert('Lỗi: ' + data.message);
+                    if (data && data.message === UNPAID_FINES_MESSAGE) {
+                        showUnpaidFinesPopup();
+                    } else {
+                        alert('Lỗi: ' + (data && data.message ? data.message : 'Không xác định'));
+                    }
                 }
             })
             .catch(err => alert('Lỗi kết nối: ' + err.message));
+            });
         }
 
         // Restore selection across filtering/pagination

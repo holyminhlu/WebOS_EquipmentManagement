@@ -1,0 +1,178 @@
+/* System Admin extra styles (builds on styleDashboard.css variables/classes) */
+
+.sysadmin-topbar {
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.sysadmin-user-name {
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.sysadmin-user-meta {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.sysadmin-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.sysadmin-tab {
+    border: 1px solid var(--border-color);
+    background: var(--bg-white);
+    color: var(--text-color);
+    padding: 0.6rem 0.9rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 600;
+}
+
+.sysadmin-tab:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.sysadmin-tab.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
+/* Make modals consistent with existing dashboard modal pattern */
+.modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 2000;
+    padding: 1rem;
+}
+
+.modal.open {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--bg-white);
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--border-radius);
+    width: 90%;
+    max-width: 650px;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.modal-title {
+    margin: 0;
+    color: var(--primary-color);
+}
+
+.modal-subtitle {
+    margin: 0.25rem 0 0 0;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+/* Form layout (mirrors dashboard modal conventions) */
+.reserve-form {
+    margin-top: 0.75rem;
+}
+
+.reserve-form .field {
+    margin-bottom: 0.85rem;
+}
+
+.reserve-form label {
+    display: block;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 0.35rem;
+}
+
+/* Extend dashboard form-control styling to the input types used here */
+.reserve-form input[type="email"],
+.reserve-form input[type="password"],
+.reserve-form input[type="date"] {
+    width: 100%;
+    padding: 0.65rem 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-white);
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.25;
+    box-sizing: border-box;
+    transition: var(--transition);
+}
+
+.reserve-form input[type="email"]:focus,
+.reserve-form input[type="password"]:focus,
+.reserve-form input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.12);
+}
+
+.reserve-two {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+    .reserve-two {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.help-text {
+    display: block;
+    margin-top: 0.35rem;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.sysadmin-chart-card {
+    margin-top: 0.75rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-white);
+    box-shadow: var(--shadow);
+    min-height: 320px;
+}
+
+@media (max-width: 640px) {
+    .sysadmin-chart-card {
+        min-height: 260px;
+    }
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}

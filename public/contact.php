@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
+    $subject = trim($_POST['subject'] ?? '');
     $content = trim($_POST['content'] ?? '');
     
     if (empty($name)) {
@@ -46,10 +47,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
     }
     
     if (empty($formErrors)) {
-        $formSubmitted = true;
-        $success = true;
-        $message = 'Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi trong thời gian sớm nhất.';
-        $_POST = [];
+        // Kết nối database và lưu tin nhắn
+        require_once __DIR__ . '/../includes/db.php';
+        
+        try {
+            $conn = getDBConnection();
+            
+            // Tạo tiêu đề và nội dung thông báo
+            $tieuDe = "📩 Tin nhắn liên hệ từ " . $name;
+            
+            // Format chủ đề
+            $subjectLabels = [
+                'thiet-bi' => 'Hỗ trợ về thiết bị',
+                'tai-khoan' => 'Hỗ trợ tài khoản',
+                'muon-tra' => 'Quy trình mượn trả',
+                'ky-thuat' => 'Vấn đề kỹ thuật',
+                'khac' => 'Khác'
+            ];
+            $subjectText = isset($subjectLabels[$subject]) ? $subjectLabels[$subject] : 'Không xác định';
+            
+            // Tạo nội dung thông báo
+            $noiDung = "───────────────────────\n";
+            $noiDung .= "👤 Người gửi: " . $name . "\n";
+            $noiDung .= "📧 Email: " . $email . "\n";
+            if (!empty($phone)) {
+                $noiDung .= "📱 Số điện thoại: " . $phone . "\n";
+            }
+            $noiDung .= "📋 Chủ đề: " . $subjectText . "\n";
+            $noiDung .= "🕐 Thời gian: " . date('d/m/Y H:i:s') . "\n";
+            $noiDung .= "───────────────────────\n\n";
+            $noiDung .= "💬 Nội dung:\n" . $content . "\n\n";
+            $noiDung .= "───────────────────────\n";
+            $noiDung .= "⚠️ Vui lòng phản hồi qua email: " . $email;
+            
+            // Lấy danh sách tất cả admin đang hoạt động
+            $sqlAdmins = "SELECT MaNguoiDung FROM nguoidung 
+                         WHERE MaVaiTro IN (1, 1101) 
+                         AND HoatDong = 1 
+                         AND IsDeleted = 0";
+            $resultAdmins = $conn->query($sqlAdmins);
+            
+            if ($resultAdmins && $resultAdmins->num_rows > 0) {
+                $countSuccess = 0;
+                
+                while ($admin = $resultAdmins->fetch_assoc()) {
+                    $adminId = $admin['MaNguoiDung'];
+                    
+                    // Tạo mã thông báo unique
+                    $maThongBao = 'TB' . date('YmdHis') . rand(1000, 9999);
+                    
+                    // Escape dữ liệu để tránh SQL injection
+                    $maThongBaoEsc = $conn->real_escape_string($maThongBao);
+                    $adminIdEsc = $conn->real_escape_string($adminId);
+                    $tieuDeEsc = $conn->real_escape_string($tieuDe);
+                    $noiDungEsc = $conn->real_escape_string($noiDung);
+                    
+                    // Insert thông báo
+                    $sqlInsert = "INSERT INTO thongbao 
+                                 (MaThongBao, MaNguoiDung, TieuDe, NoiDung, DaDoc, NgayGui, Kenh, IsDeleted) 
+                                 VALUES 
+                                 ('$maThongBaoEsc', '$adminIdEsc', '$tieuDeEsc', '$noiDungEsc', 0, NOW(), 'Liên hệ', 0)";
+                    
+                    if ($conn->query($sqlInsert)) {
+                        $countSuccess++;
+                    }
+                    
+                    // Delay nhỏ để tránh trùng mã
+                    usleep(1000);
+                }
+                
+                $formSubmitted = true;
+                $success = true;
+                $message = 'Cảm ơn bạn đã liên hệ! Tin nhắn của bạn đã được gửi đến ' . $countSuccess . ' quản trị viên. Chúng tôi sẽ phản hồi qua email trong thời gian sớm nhất.';
+                $_POST = [];
+            } else {
+                $formErrors['general'] = 'Không tìm thấy quản trị viên trong hệ thống. Vui lòng thử lại sau.';
+                $formSubmitted = true;
+            }
+            
+        } catch (Exception $e) {
+            $formErrors['general'] = 'Có lỗi xảy ra khi gửi tin nhắn. Vui lòng thử lại sau.';
+            $formSubmitted = true;
+            error_log('Contact form error: ' . $e->getMessage());
+        }
     } else {
         $formSubmitted = true;
     }
@@ -1205,6 +1285,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
                         <div class="alert alert-success">
                             <i class="fas fa-check-circle"></i>
                             <?php echo htmlspecialchars($message); ?>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <?php if (isset($formErrors['general'])): ?>
+                        <div class="alert alert-danger" style="background: #fee; color: #c33; border: 1px solid #fcc;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <?php echo htmlspecialchars($formErrors['general']); ?>
                         </div>
                     <?php endif; ?>
                     

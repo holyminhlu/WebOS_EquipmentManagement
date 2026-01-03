@@ -1245,7 +1245,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
                 <div class="map-container">
                     <h3><i class="fas fa-map-marked-alt"></i> Vị trí trên bản đồ</h3>
                     <iframe 
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31439.97505931759!2d106.299709051211!3d9.934216618097391!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31a0175ea296facb%3A0x55ded92e29068221!2zVHLGsOG7nW5nIMSQ4bqhaSBI4buNYyBUcsOgIFZpbmg!5e0!3m2!1svi!2s!4v1767453773974!5m2!1svi!2s"
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3930.126136853947!2d106.34393900917988!3d9.923451590137127!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31a0175ea296facb%3A0x55ded92e29068221!2zVHLGsOG7nW5nIMSQ4bqhaSBI4buNYyBUcsOgIFZpbmg!5e0!3m2!1svi!2s!4v1767466698764!5m2!1svi!2s"
                         allowfullscreen="" 
                         loading="lazy">
                     </iframe>
@@ -1256,11 +1256,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
                             <i class="fas fa-bolt"></i> Hoặc Liên Hệ Nhanh Qua
                         </h4>
                         <div class="quick-contact-buttons">
-                            <a href="tel:02943855246" class="quick-btn phone">
+                            <a href="tel:02943855959" class="quick-btn phone">
                                 <i class="fas fa-phone"></i>
                                 <span>Gọi ngay</span>
                             </a>
-                            <a href="mailto:support@tvu.edu.vn" class="quick-btn email">
+                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=tranphilip91@gmail.com" target="_blank" class="quick-btn email">
                                 <i class="fas fa-envelope"></i>
                                 <span>Email</span>
                             </a>

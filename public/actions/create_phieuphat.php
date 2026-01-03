@@ -10,6 +10,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../../includes/user.php';
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../includes/audit.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Method không hợp lệ']);
@@ -188,6 +189,10 @@ try {
         exit;
     }
 
+    // Audit
+    $afterPp = dbQueryOne("SELECT * FROM `phieuphat` WHERE MaPhat = ? LIMIT 1", [$maPhat]);
+    auditLog('PhieuPhat', $maPhat, 'CREATE', null, $afterPp);
+
     // Create notification for the fined user
     $warn = '';
     try {
@@ -237,3 +242,4 @@ try {
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()]);
 }
+

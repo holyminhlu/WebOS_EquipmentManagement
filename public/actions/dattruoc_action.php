@@ -11,6 +11,7 @@ session_start();
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/user.php';
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../includes/audit.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ../dashboard.php');
@@ -97,10 +98,18 @@ try {
         exit;
     }
 
+    $beforeGroup = $rows;
+
     dbExecute(
         "UPDATE dattruoc\n         SET TrangThai = 'Đã duyệt'\n         WHERE IsDeleted = 0\n           AND TrangThai = 'Chờ duyệt'\n           AND (MaDatTruoc = ? OR MaDatTruoc LIKE ?)",
         [$maDatTruoc, $like]
     );
+
+    $afterGroup = dbQuery(
+        "SELECT $selectCols\n         FROM dattruoc\n         WHERE IsDeleted = 0\n           AND (MaDatTruoc = ? OR MaDatTruoc LIKE ?)",
+        [$maDatTruoc, $like]
+    );
+    auditLog('DatTruoc', $maDatTruoc, 'APPROVE', $beforeGroup, $afterGroup);
 
     // Create a matching YeuCauMuon + PhieuMuon so it appears under Phiếu mượn like an approved request.
     // Idempotent: if a slip already exists for this group key, do nothing.
@@ -224,6 +233,8 @@ try {
         $ins = dbExecute($sqlInsert, [$maPhieu, $soPhieu, $maDatTruoc, $maNguoiYeuCau, $ngayPhat, $ngayPhaiTra, $trangThai, $_SESSION['user_id']]);
 
         if ($ins !== false) {
+            $afterPm = dbQueryOne("SELECT * FROM `phieumuon` WHERE MaPhieu = ? LIMIT 1", [$maPhieu]);
+            auditLog('PhieuMuon', $maPhieu, 'CREATE', null, $afterPm);
             // Generate base CTM number once
             $lastCt = dbQueryOne("SELECT MaChiTiet FROM `chitietmuon` ORDER BY MaChiTiet DESC LIMIT 1");
             $nextCtNum = 1;
@@ -262,8 +273,13 @@ try {
                     "INSERT INTO `chitietmuon` (MaChiTiet, MaPhieu, MaThietBi, SoLuong, TinhTrangLucMuon, GhiChu, IsDeleted) VALUES (?,?,?,?,?,?,0)",
                     [$maChiTiet, $maPhieu, $deviceId, 1, 'Tốt', 'Tạo khi duyệt đặt trước']
                 );
+                $afterCtm = dbQueryOne("SELECT * FROM `chitietmuon` WHERE MaChiTiet = ? LIMIT 1", [$maChiTiet]);
+                auditLog('ChiTietMuon', $maChiTiet, 'CREATE', null, $afterCtm);
                 // lock device as borrowed/reserved
+                $beforeTb = dbQueryOne("SELECT * FROM `thietbi` WHERE MaThietBi = ? LIMIT 1", [$deviceId]);
                 dbExecute("UPDATE `thietbi` SET MaTrangThai = 2 WHERE MaThietBi = ?", [$deviceId]);
+                $afterTb = dbQueryOne("SELECT * FROM `thietbi` WHERE MaThietBi = ? LIMIT 1", [$deviceId]);
+                auditLog('ThietBi', $deviceId, 'UPDATE', $beforeTb, $afterTb);
             }
         }
     }
@@ -286,3 +302,4 @@ try {
 
 header('Location: ../dashboard.php');
 exit;
+

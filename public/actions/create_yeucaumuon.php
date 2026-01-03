@@ -7,6 +7,7 @@ session_start();
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../../includes/db.php';
 require_once __DIR__ . '/../../includes/user.php';
+require_once __DIR__ . '/../../includes/audit.php';
 
 // Kiểm tra đăng nhập
 if (!isset($_SESSION['user_id'])) {
@@ -269,6 +270,10 @@ try {
             VALUES (?, ?, ?, NOW(), ?, ?, 'Chờ duyệt', ?, 0)";
     
         dbExecute($sql, [$maYeuCau, $_SESSION['user_id'], $mucDich, $ngayBatDau, $ngayKetThuc, $ghiChu]);
+
+        // Audit
+        $afterYc = dbQueryOne("SELECT * FROM `yeucaumuon` WHERE MaYeuCau = ? LIMIT 1", [$maYeuCau]);
+        auditLog('YeuCauMuon', $maYeuCau, 'CREATE', null, $afterYc);
     
     // Tạo thông báo cho user
     $lastTb = dbQueryOne("SELECT MaThongBao FROM thongbao ORDER BY MaThongBao DESC LIMIT 1");
@@ -299,3 +304,4 @@ try {
     ]);
 }
 ?>
+

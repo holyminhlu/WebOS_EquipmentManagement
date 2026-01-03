@@ -11,6 +11,7 @@ header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/user.php';
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../includes/audit.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Method không hợp lệ']);
@@ -86,7 +87,7 @@ try {
     }
     $maBaoTri = 'BT' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
 
-    // Insert maintenance ticket
+        // Insert maintenance ticket
     $sql = "INSERT INTO `baotri` (MaBaoTri, MaThietBi, NgayBao, NgaySua, TrangThai, MaNhaCungCap, ChiPhi, MoTa, IsDeleted)
             VALUES (?, ?, NOW(), NULL, 'Đang bảo trì', ?, NULL, ?, 0)";
     $ins = dbExecute($sql, [$maBaoTri, $maThietBi, $maNhaCungCap, $moTa]);
@@ -96,12 +97,20 @@ try {
         exit;
     }
 
+    // Audit: created maintenance ticket
+    $afterBt = dbQueryOne("SELECT * FROM `baotri` WHERE MaBaoTri = ? LIMIT 1", [$maBaoTri]);
+    auditLog('BaoTri', $maBaoTri, 'CREATE', null, $afterBt);
+
     // Update device status to maintenance (3)
     $upd = dbExecute("UPDATE `thietbi` SET MaTrangThai = 3 WHERE MaThietBi = ? AND IsDeleted = 0 AND MaTrangThai = 1", [$maThietBi]);
     if ($upd === false || (int)$upd <= 0) {
         echo json_encode(['success' => false, 'message' => 'Đã tạo phiếu nhưng không thể cập nhật trạng thái thiết bị']);
         exit;
     }
+
+    // Audit: device status updated
+    $afterTb = dbQueryOne("SELECT * FROM `thietbi` WHERE MaThietBi = ? LIMIT 1", [$maThietBi]);
+    auditLog('ThietBi', $maThietBi, 'UPDATE', $tb, $afterTb);
 
     echo json_encode([
         'success' => true,
@@ -111,3 +120,4 @@ try {
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()]);
 }
+

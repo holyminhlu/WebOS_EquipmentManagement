@@ -5,6 +5,7 @@
  *   + Borrow (PhieuMuon.NgayPhat)
  *   + Reservation (DatTruoc.NgayTao)
  *   + Fine (PhieuPhat.NgayTao)
+ *   + Maintenance (BaoTri.NgayBao)
  */
 
 require_once __DIR__ . '/_guard.php';
@@ -36,6 +37,7 @@ function initSeries($daysInMonth) {
 $borrowByDay = initSeries($daysInMonth);
 $reserveByDay = initSeries($daysInMonth);
 $fineByDay = initSeries($daysInMonth);
+$maintByDay = initSeries($daysInMonth);
 
 // Borrow: count PhieuMuon by NgayPhat
 $rows = dbQuery(
@@ -79,15 +81,31 @@ foreach ($rows as $r) {
     if ($d >= 1 && $d <= $daysInMonth) $fineByDay[$d] = (int)($r['c'] ?? 0);
 }
 
+// Maintenance: count BaoTri by NgayBao
+$rows = dbQuery(
+    "SELECT DAY(NgayBao) AS d, COUNT(*) AS c
+     FROM `baotri`
+     WHERE IsDeleted = 0
+       AND NgayBao >= ? AND NgayBao <= ?
+     GROUP BY DAY(NgayBao)",
+    [$start, $end]
+);
+foreach ($rows as $r) {
+    $d = (int)($r['d'] ?? 0);
+    if ($d >= 1 && $d <= $daysInMonth) $maintByDay[$d] = (int)($r['c'] ?? 0);
+}
+
 $labels = [];
 $borrow = [];
 $reserve = [];
 $fine = [];
+$maint = [];
 for ($d = 1; $d <= $daysInMonth; $d++) {
     $labels[] = (string)$d;
     $borrow[] = (int)$borrowByDay[$d];
     $reserve[] = (int)$reserveByDay[$d];
     $fine[] = (int)$fineByDay[$d];
+    $maint[] = (int)$maintByDay[$d];
 }
 
 echo json_encode([
@@ -99,5 +117,6 @@ echo json_encode([
         'borrow' => $borrow,
         'reserve' => $reserve,
         'fine' => $fine,
+        'maint' => $maint,
     ],
 ], JSON_UNESCAPED_UNICODE);

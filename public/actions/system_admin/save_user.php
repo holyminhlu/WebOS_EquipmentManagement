@@ -6,6 +6,7 @@
 require_once __DIR__ . '/_guard.php';
 require_once __DIR__ . '/../../../includes/auth.php';
 require_once __DIR__ . '/../../../includes/db.php';
+require_once __DIR__ . '/../../../includes/audit.php';
 
 $type = isset($_POST['type']) ? trim((string)$_POST['type']) : 'user';
 $maNguoiDung = isset($_POST['maNguoiDung']) ? trim((string)$_POST['maNguoiDung']) : '';
@@ -70,13 +71,19 @@ try {
             dbExecute("UPDATE `nguoidung` SET HoatDong = 0 WHERE MaNguoiDung = ? AND IsDeleted = 0", [(string)$res['user']['MaNguoiDung']]);
         }
 
+        if (isset($res['user']['MaNguoiDung'])) {
+            $newId = (string)$res['user']['MaNguoiDung'];
+            $after = dbQueryOne("SELECT * FROM `nguoidung` WHERE MaNguoiDung = ? LIMIT 1", [$newId]);
+            auditLog('NguoiDung', $newId, 'CREATE', null, $after);
+        }
+
         echo json_encode(['success' => true, 'message' => 'Tạo tài khoản thành công']);
         exit;
     }
 
     // Update
     $existing = dbQueryOne(
-        "SELECT MaNguoiDung, MaVaiTro FROM `nguoidung` WHERE MaNguoiDung = ? AND IsDeleted = 0 LIMIT 1",
+        "SELECT * FROM `nguoidung` WHERE MaNguoiDung = ? AND IsDeleted = 0 LIMIT 1",
         [$maNguoiDung]
     );
     if (!$existing) {
@@ -155,7 +162,11 @@ try {
         exit;
     }
 
+    $after = dbQueryOne("SELECT * FROM `nguoidung` WHERE MaNguoiDung = ? AND IsDeleted = 0 LIMIT 1", [$maNguoiDung]);
+    auditLog('NguoiDung', $maNguoiDung, 'UPDATE', $existing, $after);
+
     echo json_encode(['success' => true, 'message' => 'Cập nhật tài khoản thành công']);
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()]);
 }
+

@@ -164,6 +164,71 @@
     min-height: 320px;
 }
 
+.sysadmin-report-card {
+    margin-top: 0.75rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-white);
+    box-shadow: var(--shadow);
+}
+
+.sysadmin-report-content h4 {
+    margin: 0.25rem 0 0.5rem 0;
+    color: var(--text-color);
+}
+
+.sysadmin-report-kpis {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+@media (min-width: 640px) {
+    .sysadmin-report-kpis {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.sysadmin-kpi {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    background: var(--bg-light);
+}
+
+.sysadmin-kpi .kpi-title {
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 0.25rem;
+}
+
+.sysadmin-kpi .kpi-value {
+    font-weight: 800;
+    color: var(--primary-color);
+    font-size: 1.15rem;
+}
+
+.sysadmin-report-note {
+    margin-top: 0.75rem;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+/* Audit table: make long values wrap nicely */
+#auditTable td {
+    word-break: break-word;
+}
+
+@media print {
+    body * { visibility: hidden; }
+    #reportPrintArea, #reportPrintArea * { visibility: visible; }
+    #reportPrintArea { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; }
+    .sysadmin-report-card { border: none; }
+    .btn { display: none !important; }
+}
+
 @media (max-width: 640px) {
     .sysadmin-chart-card {
         min-height: 260px;

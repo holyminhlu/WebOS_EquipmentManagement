@@ -112,6 +112,7 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
             <button class="sysadmin-tab" data-tab="tab-devices"><i class="fas fa-boxes-stacked"></i> Thiết bị</button>
             <button class="sysadmin-tab" data-tab="tab-maint"><i class="fas fa-screwdriver-wrench"></i> Bảo trì</button>
             <button class="sysadmin-tab" data-tab="tab-reports"><i class="fas fa-chart-column"></i> Báo cáo</button>
+            <button class="sysadmin-tab" data-tab="tab-audit"><i class="fas fa-clipboard-list"></i> Nhật ký hệ thống</button>
         </div>
 
         <!-- 1) Users GV/SV -->
@@ -307,7 +308,100 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
             <div class="sysadmin-chart-card">
                 <canvas id="statsChart" height="110"></canvas>
             </div>
-            <div class="help-text">Biểu đồ thống kê số lần mượn (Phiếu mượn), đặt trước và phiếu phạt theo từng ngày trong tháng.</div>
+            <div class="help-text">Biểu đồ thống kê số lần mượn (Phiếu mượn), đặt trước, phiếu phạt và số lần gửi phiếu bảo trì theo từng ngày trong tháng.</div>
+
+            <h3 style="margin-top: 1.25rem;"><i class="fas fa-file-lines"></i> Báo cáo</h3>
+            <form class="reserve-form" onsubmit="loadMonthlyReport(event)">
+                <div class="reserve-two">
+                    <div class="field">
+                        <label>Chọn tháng</label>
+                        <input type="month" id="reportMonth" value="<?php echo date('Y-m'); ?>" required>
+                    </div>
+                    <div class="field" style="display:flex;align-items:flex-end;gap:0.75rem;flex-wrap:wrap;">
+                        <button type="submit" class="btn btn-primary" id="btnReportLoad"><i class="fas fa-file-circle-check"></i> Tạo báo cáo</button>
+                        <button type="button" class="btn btn-secondary" onclick="printMonthlyReport()"><i class="fas fa-print"></i> In</button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="sysadmin-report-card" id="reportPrintArea">
+                <div id="reportContent" class="sysadmin-report-content">
+                    <div class="empty-state">
+                        <i class="fas fa-file"></i>
+                        <p>Chọn tháng và bấm “Tạo báo cáo”</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6) Audit Log -->
+        <div class="dashboard-section sysadmin-pane" id="tab-audit" style="display:none;">
+            <h2><i class="fas fa-clipboard-list"></i> Nhật ký hệ thống</h2>
+
+            <form class="reserve-form" onsubmit="auditSearch(event)">
+                <div class="reserve-two">
+                    <div class="field">
+                        <label>Tìm kiếm</label>
+                        <input type="text" id="auditQ" placeholder="Mã nhật ký, thực thể, mã thực thể, hành động, người thực hiện...">
+                    </div>
+                    <div class="field">
+                        <label>Lọc theo hành động</label>
+                        <select id="auditAction">
+                            <option value="">-- Tất cả --</option>
+                            <option value="CREATE">CREATE</option>
+                            <option value="UPDATE">UPDATE</option>
+                            <option value="DELETE">DELETE</option>
+                            <option value="APPROVE">APPROVE</option>
+                            <option value="PAY">PAY</option>
+                            <option value="LOCK">LOCK</option>
+                            <option value="UNLOCK">UNLOCK</option>
+                            <option value="BROKEN">BROKEN</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="reserve-two">
+                    <div class="field">
+                        <label>Lọc theo thực thể</label>
+                        <select id="auditEntity">
+                            <option value="">-- Tất cả --</option>
+                            <option value="YeuCauMuon">Yêu cầu mượn</option>
+                            <option value="DatTruoc">Đặt trước</option>
+                            <option value="PhieuMuon">Phiếu mượn</option>
+                            <option value="PhieuPhat">Phiếu phạt</option>
+                            <option value="BaoTri">Bảo trì</option>
+                            <option value="ThietBi">Thiết bị</option>
+                            <option value="NguoiDung">Người dùng</option>
+                        </select>
+                    </div>
+                    <div class="field" style="display:flex;align-items:flex-end;gap:0.75rem;flex-wrap:wrap;">
+                        <button type="submit" class="btn btn-primary" id="btnAuditSearch"><i class="fas fa-magnifying-glass"></i> Tra cứu</button>
+                        <button type="button" class="btn btn-secondary" onclick="auditReset()"><i class="fas fa-rotate-left"></i> Xóa lọc</button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="sysadmin-report-card">
+                <table class="data-table" id="auditTable">
+                    <thead>
+                        <tr>
+                            <th>Thời gian</th>
+                            <th>Người thực hiện</th>
+                            <th>Hành động</th>
+                            <th>Thực thể</th>
+                            <th>Mã thực thể</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditTbody">
+                        <tr><td colspan="5" class="help-text">Đang tải...</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="modal-actions" style="margin-top:0.75rem;justify-content:space-between;">
+                    <div class="help-text" id="auditHint">Hiển thị 10 mục. Nhấn “Xem thêm” để tải tiếp.</div>
+                    <button type="button" class="btn btn-secondary" id="btnAuditMore" onclick="auditLoadMore()">Xem thêm</button>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -519,6 +613,11 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
                 if (tabId === 'tab-reports') {
                     loadMonthlyStats();
+                    loadMonthlyReport();
+                }
+
+                if (tabId === 'tab-audit') {
+                    auditReset();
                 }
             });
         });
@@ -563,6 +662,7 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
                     const cPrimary = getCssVar('--primary-color', '#2c5aa0');
                     const cSuccess = getCssVar('--success-color', '#2e7d32');
                     const cError = getCssVar('--error-color', '#c62828');
+                    const cWarning = getCssVar('--warning-color', '#ffc107');
 
                     const ctx = document.getElementById('statsChart');
                     if (!ctx) return;
@@ -603,6 +703,15 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
                                     tension: 0.25,
                                     pointRadius: 3,
                                     pointHoverRadius: 5,
+                                },
+                                {
+                                    label: 'Bảo trì (gửi)',
+                                    data: series.maint || [],
+                                    borderColor: cWarning,
+                                    backgroundColor: cWarning,
+                                    tension: 0.25,
+                                    pointRadius: 3,
+                                    pointHoverRadius: 5,
                                 }
                             ]
                         },
@@ -625,6 +734,248 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
                 })
                 .catch(err => alert('Lỗi kết nối: ' + err.message))
                 .finally(() => { if (btn) btn.disabled = false; });
+        }
+
+        function formatMoneyVND(amount) {
+            const n = Number(amount || 0);
+            try {
+                return n.toLocaleString('vi-VN') + ' VNĐ';
+            } catch (_) {
+                return String(n) + ' VNĐ';
+            }
+        }
+
+        function escHtml(s) {
+            return String(s ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // === Audit log ===
+        let auditOffset = 0;
+        const auditLimit = 10;
+
+        function auditReset() {
+            const qEl = document.getElementById('auditQ');
+            const aEl = document.getElementById('auditAction');
+            const eEl = document.getElementById('auditEntity');
+            if (qEl) qEl.value = '';
+            if (aEl) aEl.value = '';
+            if (eEl) eEl.value = '';
+            auditOffset = 0;
+            auditLoad(true);
+        }
+
+        function auditSearch(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            auditOffset = 0;
+            auditLoad(true);
+        }
+
+        function auditLoadMore() {
+            auditLoad(false);
+        }
+
+        function auditLoad(resetTable) {
+            const tbody = document.getElementById('auditTbody');
+            const btnMore = document.getElementById('btnAuditMore');
+            const btnSearch = document.getElementById('btnAuditSearch');
+            const hint = document.getElementById('auditHint');
+
+            const q = (document.getElementById('auditQ')?.value || '').trim();
+            const hanhDong = (document.getElementById('auditAction')?.value || '').trim();
+            const thucThe = (document.getElementById('auditEntity')?.value || '').trim();
+
+            if (resetTable && tbody) {
+                tbody.innerHTML = '<tr><td colspan="5" class="help-text">Đang tải...</td></tr>';
+            }
+
+            if (btnMore) btnMore.disabled = true;
+            if (btnSearch) btnSearch.disabled = true;
+
+            const fd = new FormData();
+            fd.append('offset', String(auditOffset));
+            fd.append('limit', String(auditLimit));
+            fd.append('q', q);
+            fd.append('hanhDong', hanhDong);
+            fd.append('thucThe', thucThe);
+
+            fetch('actions/system_admin/audit_list.php', { method: 'POST', body: fd })
+                .then(jsonOrError)
+                .then(data => {
+                    if (!data.success) {
+                        alert('Lỗi: ' + (data.message || 'Không xác định'));
+                        return;
+                    }
+
+                    const items = Array.isArray(data.items) ? data.items : [];
+
+                    if (resetTable && tbody) tbody.innerHTML = '';
+                    if (tbody && items.length === 0 && auditOffset === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="help-text">Không có dữ liệu</td></tr>';
+                    } else if (tbody) {
+                        for (const it of items) {
+                            const tg = escHtml(it.ThoiGian || '');
+                            const userId = escHtml(it.ThucHienBoi || '');
+                            const hoTen = it.HoTen ? (' - ' + escHtml(it.HoTen)) : '';
+                            const hd = escHtml(it.HanhDong || '');
+                            const tt = escHtml(it.ThucThe || '');
+                            const mt = escHtml(it.MaThucThe || '');
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `<td>${tg}</td><td>${userId}${hoTen}</td><td><strong>${hd}</strong></td><td>${tt}</td><td>${mt}</td>`;
+                            tbody.appendChild(tr);
+                        }
+                    }
+
+                    auditOffset += items.length;
+                    const canMore = items.length === auditLimit;
+                    if (btnMore) btnMore.style.display = canMore ? 'inline-flex' : 'none';
+                    if (hint) hint.textContent = 'Đang hiển thị ' + auditOffset + ' mục. ' + (canMore ? 'Nhấn “Xem thêm” để tải tiếp.' : 'Đã tải hết.');
+                })
+                .catch(err => alert('Lỗi kết nối: ' + err.message))
+                .finally(() => {
+                    if (btnMore) btnMore.disabled = false;
+                    if (btnSearch) btnSearch.disabled = false;
+                });
+        }
+
+        function renderKhuTable(title, rows, cols) {
+            const safeRows = Array.isArray(rows) ? rows : [];
+            const safeCols = Array.isArray(cols) ? cols : [];
+
+            let html = '<h4>' + escHtml(title) + '</h4>';
+            if (safeRows.length === 0) {
+                html += '<div class="help-text">Không có dữ liệu.</div>';
+                return html;
+            }
+
+            html += '<table class="data-table" style="margin-top:0.5rem;">';
+            html += '<thead><tr>' + safeCols.map(c => '<th>' + escHtml(c.label) + '</th>').join('') + '</tr></thead>';
+            html += '<tbody>';
+            for (const r of safeRows) {
+                html += '<tr>' + safeCols.map(c => {
+                    const v = r[c.key];
+                    return '<td>' + (c.format ? c.format(v) : escHtml(v)) + '</td>';
+                }).join('') + '</tr>';
+            }
+            html += '</tbody></table>';
+            return html;
+        }
+
+        function loadMonthlyReport(e) {
+            if (e && e.preventDefault) e.preventDefault();
+
+            const monthEl = document.getElementById('reportMonth');
+            const month = monthEl ? monthEl.value : '';
+            if (!month) return;
+
+            const btn = document.getElementById('btnReportLoad');
+            if (btn) btn.disabled = true;
+
+            const content = document.getElementById('reportContent');
+            if (content) {
+                content.innerHTML = '<div class="empty-state"><i class="fas fa-spinner"></i><p>Đang tạo báo cáo...</p></div>';
+            }
+
+            const fd = new FormData();
+            fd.append('month', month);
+
+            fetch('actions/system_admin/report_monthly.php', { method: 'POST', body: fd })
+                .then(jsonOrError)
+                .then(data => {
+                    if (!data.success) {
+                        alert('Lỗi: ' + (data.message || 'Không xác định'));
+                        return;
+                    }
+
+                    const totals = data.totals || {};
+                    const byKhu = data.byKhu || {};
+
+                    let html = '';
+                    html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">';
+                    html += '<div>';
+                    html += '<h3 class="modal-title" style="margin:0;">BÁO CÁO THÁNG ' + escHtml(month) + '</h3>';
+                    html += '<div class="help-text">Hệ thống mượn trả thiết bị</div>';
+                    html += '</div>';
+                    html += '<div class="help-text">Ngày in: ' + escHtml(new Date().toLocaleString('vi-VN')) + '</div>';
+                    html += '</div>';
+
+                    html += '<div class="sysadmin-report-kpis">';
+                    html += '<div class="sysadmin-kpi"><div class="kpi-title">Số lần mượn trong tháng</div><div class="kpi-value">' + escHtml(totals.borrowCount) + '</div></div>';
+                    html += '<div class="sysadmin-kpi"><div class="kpi-title">Số lần đặt trước trong tháng</div><div class="kpi-value">' + escHtml(totals.reserveCount) + '</div></div>';
+                    html += '<div class="sysadmin-kpi"><div class="kpi-title">Số lần phạt trong tháng</div><div class="kpi-value">' + escHtml(totals.fineCount) + ' (' + escHtml(formatMoneyVND(totals.fineSum)) + ')</div></div>';
+                    html += '<div class="sysadmin-kpi"><div class="kpi-title">Số lần bảo trì trong tháng</div><div class="kpi-value">' + escHtml(totals.maintCount) + ' (' + escHtml(formatMoneyVND(totals.maintSum)) + ')</div></div>';
+                    html += '<div class="sysadmin-kpi"><div class="kpi-title">Số lượng thiết bị hỏng trong tháng</div><div class="kpi-value">' + escHtml(totals.brokenCount) + '</div></div>';
+                    html += '<div class="sysadmin-kpi"><div class="kpi-title">Thiết bị mới thêm trong tháng</div><div class="kpi-value">' + escHtml(totals.newDeviceCount) + ' (' + escHtml(formatMoneyVND(totals.newDeviceSum)) + ')</div></div>';
+                    html += '</div>';
+
+                    html += '<div style="margin-top:1rem;">';
+                    html += renderKhuTable(
+                        'Báo cáo số lượng mượn thiết bị theo từng khu',
+                        byKhu.borrowDevices,
+                        [
+                            { key: 'Khu', label: 'Khu' },
+                            { key: 'SoLuong', label: 'Số lượng mượn', format: v => escHtml(Number(v || 0).toLocaleString('vi-VN')) }
+                        ]
+                    );
+
+                    html += renderKhuTable(
+                        'Báo cáo số lượng phạt và tổng phạt theo từng khu',
+                        byKhu.fine,
+                        [
+                            { key: 'Khu', label: 'Khu' },
+                            { key: 'SoLuong', label: 'Số lần phạt', format: v => escHtml(Number(v || 0).toLocaleString('vi-VN')) },
+                            { key: 'TongTien', label: 'Tổng tiền phạt', format: v => escHtml(formatMoneyVND(v)) }
+                        ]
+                    );
+
+                    html += renderKhuTable(
+                        'Báo cáo số lần bảo trì và chi phí bảo trì theo từng khu',
+                        byKhu.maint,
+                        [
+                            { key: 'Khu', label: 'Khu' },
+                            { key: 'SoLan', label: 'Số lần bảo trì', format: v => escHtml(Number(v || 0).toLocaleString('vi-VN')) },
+                            { key: 'TongChiPhi', label: 'Tổng chi phí', format: v => escHtml(formatMoneyVND(v)) }
+                        ]
+                    );
+
+                    html += renderKhuTable(
+                        'Báo cáo số lượng thiết bị hỏng theo từng khu',
+                        byKhu.broken,
+                        [
+                            { key: 'Khu', label: 'Khu' },
+                            { key: 'SoLuong', label: 'Số lượng thiết bị hỏng', format: v => escHtml(Number(v || 0).toLocaleString('vi-VN')) }
+                        ]
+                    );
+
+                    html += renderKhuTable(
+                        'Báo cáo số lượng thiết bị và tổng tiền thiết bị mới thêm theo từng khu',
+                        byKhu.newDevice,
+                        [
+                            { key: 'Khu', label: 'Khu' },
+                            { key: 'SoLuong', label: 'Số lượng thiết bị', format: v => escHtml(Number(v || 0).toLocaleString('vi-VN')) },
+                            { key: 'TongTien', label: 'Tổng tiền', format: v => escHtml(formatMoneyVND(v)) }
+                        ]
+                    );
+                    html += '</div>';
+
+                    if (content) content.innerHTML = html;
+                })
+                .catch(err => alert('Lỗi kết nối: ' + err.message))
+                .finally(() => { if (btn) btn.disabled = false; });
+        }
+
+        function printMonthlyReport() {
+            // Ensure there is some report content first
+            const content = document.getElementById('reportContent');
+            if (!content || !content.innerText.trim()) {
+                alert('Vui lòng tạo báo cáo trước khi in');
+                return;
+            }
+            window.print();
         }
 
         // === User/Admin CRUD ===

@@ -7,6 +7,7 @@
 
 require_once __DIR__ . '/_guard.php';
 require_once __DIR__ . '/../../../includes/db.php';
+require_once __DIR__ . '/../../../includes/audit.php';
 
 $maBaoTri = isset($_POST['maBaoTri']) ? trim((string)$_POST['maBaoTri']) : '';
 $maThietBi = isset($_POST['maThietBi']) ? trim((string)$_POST['maThietBi']) : '';
@@ -35,6 +36,9 @@ try {
         exit;
     }
 
+    $beforeBt = $bt;
+    $beforeTb = dbQueryOne("SELECT * FROM `thietbi` WHERE MaThietBi = ? AND IsDeleted = 0 LIMIT 1", [$maThietBi]);
+
     $ok1 = dbExecute(
         "UPDATE `baotri`
          SET NgaySua = NOW(), TrangThai = 'Thiết bị hỏng', ChiPhi = NULL
@@ -47,6 +51,9 @@ try {
         exit;
     }
 
+    $afterBt = dbQueryOne("SELECT * FROM `baotri` WHERE MaBaoTri = ? AND IsDeleted = 0 LIMIT 1", [$maBaoTri]);
+    auditLog('BaoTri', $maBaoTri, 'BROKEN', $beforeBt, $afterBt);
+
     $ok2 = dbExecute(
         "UPDATE `thietbi` SET MaTrangThai = 4 WHERE MaThietBi = ? AND IsDeleted = 0",
         [$maThietBi]
@@ -57,7 +64,11 @@ try {
         exit;
     }
 
+    $afterTb = dbQueryOne("SELECT * FROM `thietbi` WHERE MaThietBi = ? AND IsDeleted = 0 LIMIT 1", [$maThietBi]);
+    auditLog('ThietBi', $maThietBi, 'UPDATE', $beforeTb, $afterTb);
+
     echo json_encode(['success' => true, 'message' => 'Đã đánh dấu thiết bị hỏng và cập nhật trạng thái thiết bị']);
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()]);
 }
+

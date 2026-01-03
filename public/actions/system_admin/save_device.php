@@ -5,6 +5,7 @@
 
 require_once __DIR__ . '/_guard.php';
 require_once __DIR__ . '/../../../includes/db.php';
+require_once __DIR__ . '/../../../includes/audit.php';
 
 $mode = isset($_POST['mode']) ? trim((string)$_POST['mode']) : 'create';
 $maThietBi = isset($_POST['maThietBi']) ? trim((string)$_POST['maThietBi']) : '';
@@ -65,7 +66,8 @@ try {
     }
 
     if ($mode === 'edit') {
-        $existing = dbQueryOne("SELECT MaThietBi FROM `thietbi` WHERE IsDeleted = 0 AND MaThietBi = ? LIMIT 1", [$maThietBi]);
+        $before = dbQueryOne("SELECT * FROM `thietbi` WHERE IsDeleted = 0 AND MaThietBi = ? LIMIT 1", [$maThietBi]);
+        $existing = $before;
         if (!$existing) {
             echo json_encode(['success' => false, 'message' => 'Không tìm thấy thiết bị']);
             exit;
@@ -105,6 +107,9 @@ try {
             echo json_encode(['success' => false, 'message' => 'Không thể cập nhật thiết bị']);
             exit;
         }
+
+        $after = dbQueryOne("SELECT * FROM `thietbi` WHERE IsDeleted = 0 AND MaThietBi = ? LIMIT 1", [$maThietBi]);
+        auditLog('ThietBi', $maThietBi, 'UPDATE', $before, $after);
 
         echo json_encode(['success' => true, 'message' => 'Cập nhật thiết bị thành công']);
         exit;
@@ -147,7 +152,11 @@ try {
         exit;
     }
 
+    $after = dbQueryOne("SELECT * FROM `thietbi` WHERE MaThietBi = ? LIMIT 1", [$maThietBi]);
+    auditLog('ThietBi', $maThietBi, 'CREATE', null, $after);
+
     echo json_encode(['success' => true, 'message' => 'Thêm thiết bị thành công']);
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()]);
 }
+

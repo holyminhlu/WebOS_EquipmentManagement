@@ -9,6 +9,7 @@ session_start();
 
 require_once __DIR__ . '/../../includes/user.php';
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../includes/audit.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ../dashboard.php');
@@ -61,11 +62,16 @@ try {
     $soTien = isset($pp['SoTien']) ? (float)$pp['SoTien'] : 0;
     $maPhieu = (string)($pp['MaPhieu'] ?? '');
 
+    $beforePp = $pp;
+
     // Mark paid
     dbExecute(
         "UPDATE `phieuphat` SET DaThanhToan = 1, NgayThanhToan = NOW() WHERE MaPhat = ? AND IsDeleted = 0",
         [$maPhat]
     );
+
+    $afterPp = dbQueryOne("SELECT * FROM `phieuphat` WHERE MaPhat = ? AND IsDeleted = 0 LIMIT 1", [$maPhat]);
+    auditLog('PhieuPhat', $maPhat, 'PAY', $beforePp, $afterPp);
 
     // Save info into PhieuMuon (accumulate fine)
     if ($maPhieu !== '' && $soTien > 0) {
@@ -77,6 +83,8 @@ try {
 
     // If all fines for this borrow are paid, auto-complete the borrow slip
     if ($maPhieu !== '') {
+        $beforePm = dbQueryOne("SELECT * FROM `phieumuon` WHERE IsDeleted = 0 AND MaPhieu = ? LIMIT 1", [$maPhieu]);
+
         $unpaid = dbQueryOne(
             "SELECT COUNT(*) AS cnt FROM `phieuphat` WHERE IsDeleted = 0 AND MaPhieu = ? AND DaThanhToan = 0",
             [$maPhieu]
@@ -87,6 +95,9 @@ try {
                 "UPDATE `phieumuon` SET NgayTraThucTe = NOW(), TrangThai = 'Hoàn thành' WHERE MaPhieu = ? AND IsDeleted = 0",
                 [$maPhieu]
             );
+
+            $afterPm = dbQueryOne("SELECT * FROM `phieumuon` WHERE IsDeleted = 0 AND MaPhieu = ? LIMIT 1", [$maPhieu]);
+            auditLog('PhieuMuon', $maPhieu, 'COMPLETE', $beforePm, $afterPm);
 
             // Return devices to available when borrow is completed
             dbExecute(
@@ -109,3 +120,4 @@ try {
 
 header('Location: ../dashboard.php');
 exit;
+

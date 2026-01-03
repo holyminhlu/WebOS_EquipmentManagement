@@ -6,7 +6,6 @@
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../../includes/db.php';
-require_once __DIR__ . '/../../includes/audit.php';
 
 // Kiểm tra đăng nhập
 if (!isset($_SESSION['user_id'])) {
@@ -67,8 +66,6 @@ try {
         }
     }
 
-    $beforeGroup = $rows;
-
     dbExecute(
         "UPDATE dattruoc
          SET TrangThai = 'Đã hủy'
@@ -78,16 +75,6 @@ try {
            AND (MaDatTruoc = ? OR MaDatTruoc LIKE ?)",
         [$_SESSION['user_id'], $maDatTruoc, $like]
     );
-
-    $afterGroup = dbQuery(
-        "SELECT MaDatTruoc, TrangThai
-         FROM dattruoc
-         WHERE IsDeleted = 0
-           AND MaNguoiYeuCau = ?
-           AND (MaDatTruoc = ? OR MaDatTruoc LIKE ?)",
-        [$_SESSION['user_id'], $maDatTruoc, $like]
-    );
-    auditLog('DatTruoc', $maDatTruoc, 'CANCEL', $beforeGroup, $afterGroup);
 
     // Tạo thông báo
     $lastTb = dbQueryOne("SELECT MaThongBao FROM thongbao ORDER BY MaThongBao DESC LIMIT 1");
@@ -112,4 +99,3 @@ try {
         'message' => 'Lỗi hệ thống: ' . $e->getMessage()
     ]);
 }
-

@@ -6,8 +6,6 @@
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../../includes/db.php';
-require_once __DIR__ . '/../../includes/user.php';
-require_once __DIR__ . '/../../includes/audit.php';
 
 if (!isset($_SESSION['user_id'])) {
     echo json_encode([
@@ -21,15 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode([
         'success' => false,
         'message' => 'Method không hợp lệ'
-    ]);
-    exit;
-}
-
-// Chặn tạo đặt trước nếu còn phiếu phạt chưa thanh toán
-if (userHasUnpaidPhieuPhat($_SESSION['user_id'])) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Vui lòng thanh toán tất cả các phiếu phạt trước khi thực hiện thao tác'
     ]);
     exit;
 }
@@ -363,10 +352,6 @@ try {
             } else {
                 dbExecute($sql, [$maDatTruoc, $_SESSION['user_id'], $typeId, $ngayBatDau, $ngayKetThuc]);
             }
-
-            // Audit each created row (max 10)
-            $afterDt = dbQueryOne("SELECT * FROM `dattruoc` WHERE MaDatTruoc = ? LIMIT 1", [$maDatTruoc]);
-            auditLog('DatTruoc', $maDatTruoc, 'CREATE', null, $afterDt);
             $created[] = $maDatTruoc;
         }
     } else {
@@ -380,10 +365,6 @@ try {
             } else {
                 dbExecute($sql, [$maDatTruoc, $_SESSION['user_id'], $typeId, $ngayBatDau, $ngayKetThuc]);
             }
-
-            // Audit
-            $afterDt = dbQueryOne("SELECT * FROM `dattruoc` WHERE MaDatTruoc = ? LIMIT 1", [$maDatTruoc]);
-            auditLog('DatTruoc', $maDatTruoc, 'CREATE', null, $afterDt);
             $created[] = $maDatTruoc;
         }
     }
@@ -428,4 +409,3 @@ try {
         'message' => 'Lỗi hệ thống: ' . $e->getMessage()
     ]);
 }
-

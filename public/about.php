@@ -121,24 +121,7 @@ if ($isLoggedIn) {
         </nav>
     </header>
 
-    <!-- Hero Section 
-    <section class="hero-section">
-        <div class="hero-container">
-            <div class="hero-content">
-                <h1 class="hero-title">Hệ Thống Mượn Trả Thiết Bị Giảng Dạy</h1>
-                <p class="hero-description">Giải pháp quản lý và cho mượn thiết bị giảng dạy thông minh, hiệu quả tại Trường Đại học Trà Vinh</p>
-                <div class="hero-actions">
-                    <a href="register.php" class="btn-primary">Đăng ký ngay</a>
-                    <a href="#features" class="btn-secondary">Tìm hiểu thêm</a>
-                </div>
-            </div>
-            <div class="hero-image">
-                <div class="image-placeholder">
-                    <i class="fas fa-laptop-code"></i>
-                </div>
-            </div>
-        </div>
-    </section>-->
+   
 
     <!-- About Section -->
     <section class="about-section">
@@ -155,11 +138,11 @@ if ($isLoggedIn) {
                     
                     <div class="stats-grid">
                         <div class="stat-item">
-                            <div class="stat-number">500+</div>
+                            <div class="stat-number">400+</div>
                             <div class="stat-label">Thiết bị hiện có</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-number">2,000+</div>
+                            <div class="stat-number">3,000+</div>
                             <div class="stat-label">Người dùng</div>
                         </div>
                         <div class="stat-item">

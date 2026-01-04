@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
+    $subject = trim($_POST['subject'] ?? '');
     $content = trim($_POST['content'] ?? '');
     
     if (empty($name)) {
@@ -46,10 +47,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
     }
     
     if (empty($formErrors)) {
-        $formSubmitted = true;
-        $success = true;
-        $message = 'Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi trong thời gian sớm nhất.';
-        $_POST = [];
+        // Kết nối database và lưu tin nhắn
+        require_once __DIR__ . '/../includes/db.php';
+        
+        try {
+            $conn = getDBConnection();
+            
+            // Tạo tiêu đề và nội dung thông báo
+            $tieuDe = "📩 Tin nhắn liên hệ từ " . $name;
+            
+            // Format chủ đề
+            $subjectLabels = [
+                'thiet-bi' => 'Hỗ trợ về thiết bị',
+                'tai-khoan' => 'Hỗ trợ tài khoản',
+                'muon-tra' => 'Quy trình mượn trả',
+                'ky-thuat' => 'Vấn đề kỹ thuật',
+                'khac' => 'Khác'
+            ];
+            $subjectText = isset($subjectLabels[$subject]) ? $subjectLabels[$subject] : 'Không xác định';
+            
+            // Tạo nội dung thông báo
+            $noiDung = "───────────────────────\n";
+            $noiDung .= "👤 Người gửi: " . $name . "\n";
+            $noiDung .= "📧 Email: " . $email . "\n";
+            if (!empty($phone)) {
+                $noiDung .= "📱 Số điện thoại: " . $phone . "\n";
+            }
+            $noiDung .= "📋 Chủ đề: " . $subjectText . "\n";
+            $noiDung .= "🕐 Thời gian: " . date('d/m/Y H:i:s') . "\n";
+            $noiDung .= "───────────────────────\n\n";
+            $noiDung .= "💬 Nội dung:\n" . $content . "\n\n";
+            $noiDung .= "───────────────────────\n";
+            $noiDung .= "⚠️ Vui lòng phản hồi qua email: " . $email;
+            
+            // Lấy danh sách tất cả admin đang hoạt động
+            $sqlAdmins = "SELECT MaNguoiDung FROM nguoidung 
+                         WHERE MaVaiTro IN (1, 1101) 
+                         AND HoatDong = 1 
+                         AND IsDeleted = 0";
+            $resultAdmins = $conn->query($sqlAdmins);
+            
+            if ($resultAdmins && $resultAdmins->num_rows > 0) {
+                $countSuccess = 0;
+                
+                while ($admin = $resultAdmins->fetch_assoc()) {
+                    $adminId = $admin['MaNguoiDung'];
+                    
+                    // Tạo mã thông báo unique
+                    $maThongBao = 'TB' . date('YmdHis') . rand(1000, 9999);
+                    
+                    // Escape dữ liệu để tránh SQL injection
+                    $maThongBaoEsc = $conn->real_escape_string($maThongBao);
+                    $adminIdEsc = $conn->real_escape_string($adminId);
+                    $tieuDeEsc = $conn->real_escape_string($tieuDe);
+                    $noiDungEsc = $conn->real_escape_string($noiDung);
+                    
+                    // Insert thông báo
+                    $sqlInsert = "INSERT INTO thongbao 
+                                 (MaThongBao, MaNguoiDung, TieuDe, NoiDung, DaDoc, NgayGui, Kenh, IsDeleted) 
+                                 VALUES 
+                                 ('$maThongBaoEsc', '$adminIdEsc', '$tieuDeEsc', '$noiDungEsc', 0, NOW(), 'Liên hệ', 0)";
+                    
+                    if ($conn->query($sqlInsert)) {
+                        $countSuccess++;
+                    }
+                    
+                    // Delay nhỏ để tránh trùng mã
+                    usleep(1000);
+                }
+                
+                $formSubmitted = true;
+                $success = true;
+                $message = 'Cảm ơn bạn đã liên hệ! Tin nhắn của bạn đã được gửi đến ' . $countSuccess . ' quản trị viên. Chúng tôi sẽ phản hồi qua email trong thời gian sớm nhất.';
+                $_POST = [];
+            } else {
+                $formErrors['general'] = 'Không tìm thấy quản trị viên trong hệ thống. Vui lòng thử lại sau.';
+                $formSubmitted = true;
+            }
+            
+        } catch (Exception $e) {
+            $formErrors['general'] = 'Có lỗi xảy ra khi gửi tin nhắn. Vui lòng thử lại sau.';
+            $formSubmitted = true;
+            error_log('Contact form error: ' . $e->getMessage());
+        }
     } else {
         $formSubmitted = true;
     }
@@ -820,11 +900,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
             overflow: hidden;
             border: 2px solid transparent;
             transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s ease forwards;
+        }
+        
+        .faq-item:nth-child(1) { animation-delay: 0.1s; }
+        .faq-item:nth-child(2) { animation-delay: 0.2s; }
+        .faq-item:nth-child(3) { animation-delay: 0.3s; }
+        .faq-item:nth-child(4) { animation-delay: 0.4s; }
+        .faq-item:nth-child(5) { animation-delay: 0.5s; }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .faq-item:hover {
             border-color: var(--primary-color);
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transform: translateX(8px);
         }
         
         .faq-question {
@@ -839,6 +936,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
             transition: all 0.3s ease;
             user-select: none;
             background: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .faq-question::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: linear-gradient(to bottom, var(--primary-color), #667eea);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-question:hover::before {
+            transform: scaleY(1);
         }
         
         .faq-question:hover {
@@ -847,7 +962,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
         }
         
         .faq-question i {
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             color: var(--primary-color);
             font-size: 1.2rem;
         }
@@ -857,6 +972,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
             color: var(--primary-color);
         }
         
+        .faq-item.active .faq-question::before {
+            transform: scaleY(1);
+        }
+        
         .faq-item.active .faq-question i {
             transform: rotate(180deg);
         }
@@ -864,11 +983,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
         .faq-answer {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+            background: linear-gradient(to bottom, rgba(102, 126, 234, 0.03), transparent);
         }
         
         .faq-item.active .faq-answer {
             max-height: 600px;
+            animation: slideDown 0.4s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .faq-answer p,
@@ -1165,7 +1297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
                 <div class="map-container">
                     <h3><i class="fas fa-map-marked-alt"></i> Vị trí trên bản đồ</h3>
                     <iframe 
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3928.0858274181657!2d106.34237931533284!3d9.935829792892934!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31a0176e395ae381%3A0x1db6b8d9c42f0000!2zxJDhuqFpIGjhu41jIFRyw6AgVmluaA!5e0!3m2!1svi!2s!4v1640000000000!5m2!1svi!2s"
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3930.126136853947!2d106.34393900917988!3d9.923451590137127!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31a0175ea296facb%3A0x55ded92e29068221!2zVHLGsOG7nW5nIMSQ4bqhaSBI4buNYyBUcsOgIFZpbmg!5e0!3m2!1svi!2s!4v1767466698764!5m2!1svi!2s"
                         allowfullscreen="" 
                         loading="lazy">
                     </iframe>
@@ -1176,15 +1308,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
                             <i class="fas fa-bolt"></i> Hoặc Liên Hệ Nhanh Qua
                         </h4>
                         <div class="quick-contact-buttons">
-                            <a href="tel:02943855246" class="quick-btn phone">
+                            <a href="tel:02943855959" class="quick-btn phone">
                                 <i class="fas fa-phone"></i>
                                 <span>Gọi ngay</span>
                             </a>
-                            <a href="mailto:support@tvu.edu.vn" class="quick-btn email">
+                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=tranphilip91@gmail.com" target="_blank" class="quick-btn email">
                                 <i class="fas fa-envelope"></i>
                                 <span>Email</span>
                             </a>
-                            <a href="https://zalo.me/0294385524" target="_blank" class="quick-btn zalo">
+                            <a href="https://zalo.me/0365530100" target="_blank" class="quick-btn zalo">
                                 <i class="fas fa-comment"></i>
                                 <span>Zalo</span>
                             </a>
@@ -1205,6 +1337,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
                         <div class="alert alert-success">
                             <i class="fas fa-check-circle"></i>
                             <?php echo htmlspecialchars($message); ?>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <?php if (isset($formErrors['general'])): ?>
+                        <div class="alert alert-danger" style="background: #fee; color: #c33; border: 1px solid #fcc;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <?php echo htmlspecialchars($formErrors['general']); ?>
                         </div>
                     <?php endif; ?>
                     

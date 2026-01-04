@@ -6,8 +6,6 @@
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../../includes/db.php';
-require_once __DIR__ . '/../../includes/user.php';
-require_once __DIR__ . '/../../includes/audit.php';
 
 // Kiểm tra đăng nhập
 if (!isset($_SESSION['user_id'])) {
@@ -23,15 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode([
         'success' => false,
         'message' => 'Method không hợp lệ'
-    ]);
-    exit;
-}
-
-// Chặn tạo yêu cầu mượn nếu còn phiếu phạt chưa thanh toán
-if (userHasUnpaidPhieuPhat($_SESSION['user_id'])) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Vui lòng thanh toán tất cả các phiếu phạt trước khi thực hiện thao tác'
     ]);
     exit;
 }
@@ -270,10 +259,6 @@ try {
             VALUES (?, ?, ?, NOW(), ?, ?, 'Chờ duyệt', ?, 0)";
     
         dbExecute($sql, [$maYeuCau, $_SESSION['user_id'], $mucDich, $ngayBatDau, $ngayKetThuc, $ghiChu]);
-
-        // Audit
-        $afterYc = dbQueryOne("SELECT * FROM `yeucaumuon` WHERE MaYeuCau = ? LIMIT 1", [$maYeuCau]);
-        auditLog('YeuCauMuon', $maYeuCau, 'CREATE', null, $afterYc);
     
     // Tạo thông báo cho user
     $lastTb = dbQueryOne("SELECT MaThongBao FROM thongbao ORDER BY MaThongBao DESC LIMIT 1");
@@ -304,4 +289,3 @@ try {
     ]);
 }
 ?>
-

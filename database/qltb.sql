@@ -117,6 +117,7 @@ INSERT INTO `diadiem` (`MaDiaDiem`, `TenDiaDiem`, `DiaChi`, `NguoiPhuTrach`, `Is
 (2, 'B31.201', 'Dãy B3, Tầng 2, Phòng 1', 'Trần Thị B', 0, NULL, NULL, '1'),
 (3, 'A42.101', 'Dãy A4, Tầng 1, Phòng 1', 'Lê Văn C', 0, NULL, NULL, '2'),
 (4, 'A42.201', 'Dãy A4, Tầng 2, Phòng 1', 'Trần Minh D', 0, NULL, NULL, '2');
+(5, 'A42.202', 'Dãy A4, Tầng 2, Phòng 2', 'Trần Minh D', 0, NULL, NULL, '2');
 
 -- --------------------------------------------------------
 

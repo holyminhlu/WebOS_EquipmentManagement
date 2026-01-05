@@ -10,9 +10,11 @@ require_once __DIR__ . '/../includes/db.php';
 
 $isLoggedIn = isset($_SESSION['user_id']);
 $userData = null;
+$hasUnpaidFines = false;
 if ($isLoggedIn) {
     require_once __DIR__ . '/../includes/user.php';
     $userData = getUserInfo($_SESSION['user_id']);
+    $hasUnpaidFines = userHasUnpaidPhieuPhat($_SESSION['user_id']);
 }
 
 // Lấy tham số tìm kiếm và lọc
@@ -1546,7 +1548,9 @@ if ($defaultKhu !== '') {
                 alert('Vui lòng chọn ít nhất 1 thiết bị.');
                 return;
             }
-            openBorrowModal();
+            ensureNoUnpaidFinesThen(function() {
+                openBorrowModal();
+            });
         }
 
         function openReserveModalFromSelection() {
@@ -1555,7 +1559,9 @@ if ($defaultKhu !== '') {
                 alert('Vui lòng chọn ít nhất 1 thiết bị (checkbox "Chọn thiết bị này") để đặt trước.');
                 return;
             }
-            openReserveModalForDevices(devices);
+            ensureNoUnpaidFinesThen(function() {
+                openReserveModalForDevices(devices);
+            });
         }
 
         function openBorrowModal() {
@@ -1735,6 +1741,13 @@ if ($defaultKhu !== '') {
         function submitReserveRequest(e) {
             e.preventDefault();
 
+            ensureNoUnpaidFinesThen(function() {
+                submitReserveRequestInner();
+            });
+        }
+
+        function submitReserveRequestInner() {
+
             const rawTypes = document.getElementById('reserveMaLoaiThietBi').value.trim();
             const ngayBatDau = document.getElementById('reserveNgayBatDau').value;
             const ngayKetThuc = document.getElementById('reserveNgayKetThuc').value;
@@ -1788,7 +1801,11 @@ if ($defaultKhu !== '') {
                     closeReserveModal();
                     window.location.href = 'dashboard.php';
                 } else {
-                    alert('Lỗi: ' + data.message);
+                    if (data && (data.code === 'UNPAID_FINES' || data.message === UNPAID_FINES_MESSAGE)) {
+                        alert(UNPAID_FINES_MESSAGE);
+                    } else {
+                        alert('Lỗi: ' + data.message);
+                    }
                 }
             })
             .catch(err => alert('Lỗi kết nối: ' + err.message));
@@ -1803,6 +1820,13 @@ if ($defaultKhu !== '') {
 
         function submitBorrowRequest(e) {
             e.preventDefault();
+
+            ensureNoUnpaidFinesThen(function() {
+                submitBorrowRequestInner();
+            });
+        }
+
+        function submitBorrowRequestInner() {
 
             const selected = getSelectedDevices();
             if (selected.length === 0) {
@@ -1852,10 +1876,51 @@ if ($defaultKhu !== '') {
                     clearBorrowSelection();
                     window.location.reload();
                 } else {
-                    alert('Lỗi: ' + data.message);
+                    if (data && (data.code === 'UNPAID_FINES' || data.message === UNPAID_FINES_MESSAGE)) {
+                        alert(UNPAID_FINES_MESSAGE);
+                    } else {
+                        alert('Lỗi: ' + data.message);
+                    }
                 }
             })
             .catch(err => alert('Lỗi kết nối: ' + err.message));
+        }
+
+        // Unpaid fines gate
+        const UNPAID_FINES_MESSAGE = 'Vui lòng thanh toán toàn bộ phiếu phạt trước khi thực hiện thao tác';
+        const HAS_UNPAID_FINES_SNAPSHOT = <?php echo $hasUnpaidFines ? 'true' : 'false'; ?>;
+
+        function showUnpaidFinesPopup() {
+            alert(UNPAID_FINES_MESSAGE);
+        }
+
+        function ensureNoUnpaidFinesThen(next) {
+            fetch('actions/check_unpaid_fines.php', { method: 'GET', headers: { 'Accept': 'application/json' } })
+                .then(r => r.json())
+                .then(data => {
+                    if (!data || data.success !== true) {
+                        if (HAS_UNPAID_FINES_SNAPSHOT) {
+                            showUnpaidFinesPopup();
+                            return;
+                        }
+                        if (typeof next === 'function') next();
+                        return;
+                    }
+
+                    if (data.hasUnpaid === 1) {
+                        showUnpaidFinesPopup();
+                        return;
+                    }
+
+                    if (typeof next === 'function') next();
+                })
+                .catch(() => {
+                    if (HAS_UNPAID_FINES_SNAPSHOT) {
+                        showUnpaidFinesPopup();
+                        return;
+                    }
+                    if (typeof next === 'function') next();
+                });
         }
 
         // Restore selection across filtering/pagination

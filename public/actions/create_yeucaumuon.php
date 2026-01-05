@@ -6,12 +6,25 @@
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../includes/user.php';
+
+$UNPAID_FINES_MESSAGE = 'Vui lòng thanh toán toàn bộ phiếu phạt trước khi thực hiện thao tác';
 
 // Kiểm tra đăng nhập
 if (!isset($_SESSION['user_id'])) {
     echo json_encode([
         'success' => false,
         'message' => 'Vui lòng đăng nhập để thực hiện chức năng này'
+    ]);
+    exit;
+}
+
+// Block: users with unpaid fines cannot borrow
+if (userHasUnpaidPhieuPhat($_SESSION['user_id'])) {
+    echo json_encode([
+        'success' => false,
+        'code' => 'UNPAID_FINES',
+        'message' => $UNPAID_FINES_MESSAGE,
     ]);
     exit;
 }

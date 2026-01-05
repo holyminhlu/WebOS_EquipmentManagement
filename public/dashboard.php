@@ -1367,7 +1367,7 @@ function formatMoney($amount) {
             return `${yyyy}-${mm}-${dd}`;
         }
 
-        const UNPAID_FINES_MESSAGE = 'Vui lòng thanh toán tất cả các phiếu phạt trước khi thực hiện thao tác';
+        const UNPAID_FINES_MESSAGE = 'Vui lòng thanh toán toàn bộ phiếu phạt trước khi thực hiện thao tác';
         const HAS_UNPAID_FINES_SNAPSHOT = <?php echo $hasUnpaidFines ? 'true' : 'false'; ?>;
 
         function showUnpaidFinesPopup() {

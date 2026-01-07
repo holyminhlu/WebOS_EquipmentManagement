@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th1 02, 2026 lúc 12:16 PM
+-- Thời gian đã tạo: Th1 04, 2026 lúc 05:08 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -116,7 +116,16 @@ INSERT INTO `diadiem` (`MaDiaDiem`, `TenDiaDiem`, `DiaChi`, `NguoiPhuTrach`, `Is
 (1, 'B31.101', 'Dãy B3, Tầng 1, Phòng 1', 'Nguyễn Văn A', 0, NULL, NULL, '1'),
 (2, 'B31.201', 'Dãy B3, Tầng 2, Phòng 1', 'Trần Thị B', 0, NULL, NULL, '1'),
 (3, 'A42.101', 'Dãy A4, Tầng 1, Phòng 1', 'Lê Văn C', 0, NULL, NULL, '2'),
-(4, 'A42.201', 'Dãy A4, Tầng 2, Phòng 1', 'Trần Minh D', 0, NULL, NULL, '2');
+(4, 'A42.201', 'Dãy A4, Tầng 2, Phòng 1', 'Trần Minh D', 0, NULL, NULL, '2'),
+(5, 'A42.102', 'Dãy A4, Tầng 1, Phòng 2', 'Trần Minh D', 0, NULL, NULL, '2'),
+(6, 'A42.103', 'Dãy A4, Tầng 1, Phòng 3', 'Trần Minh D', 0, NULL, NULL, '2'),
+(7, 'A42.104', 'Dãy A4, Tầng 1, Phòng 4', 'Trần Minh D', 0, NULL, NULL, '2'),
+(8, 'A42.105', 'Dãy A4, Tầng 1, Phòng 5', 'Trần Minh D', 0, NULL, NULL, '2'),
+(9, 'A42.106', 'Dãy A4, Tầng 1, Phòng 6', 'Trần Minh D', 0, NULL, NULL, '2'),
+(10, 'A42.107', 'Dãy A4, Tầng 1, Phòng 7', 'Trần Minh D', 0, NULL, NULL, '2'),
+(11, 'A42.108', 'Dãy A4, Tầng 1, Phòng 8', 'Trần Minh D', 0, NULL, NULL, '2'),
+(12, 'A42.109', 'Dãy A4, Tầng 1, Phòng 9', 'Trần Minh D', 0, NULL, NULL, '2'),
+(13, 'A42.110', 'Dãy A4, Tầng 1, Phòng 10', 'Trần Minh D', 0, NULL, NULL, '2');
 
 -- --------------------------------------------------------
 
@@ -557,7 +566,7 @@ ALTER TABLE `yeucaumuon`
 -- AUTO_INCREMENT cho bảng `diadiem`
 --
 ALTER TABLE `diadiem`
-  MODIFY `MaDiaDiem` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `MaDiaDiem` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT cho bảng `khoaphongban`

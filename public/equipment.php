@@ -1028,10 +1028,6 @@ if ($defaultKhu !== '') {
                                         <span class="info-value"><?php echo htmlspecialchars($eq['MaTaiSan'] ?? 'N/A'); ?></span>
                                     </div>
                                     <div class="info-row">
-                                        <span class="info-label">Vị trí:</span>
-                                        <span class="info-value"><?php echo htmlspecialchars($eq['TenDiaDiem']); ?></span>
-                                    </div>
-                                    <div class="info-row">
                                         <span class="info-label">Trạng thái:</span>
                                         <span class="info-value">
                                             <?php

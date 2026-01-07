@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th1 04, 2026 lúc 05:08 AM
+-- Thời gian đã tạo: Th1 07, 2026 lúc 03:35 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -125,7 +125,10 @@ INSERT INTO `diadiem` (`MaDiaDiem`, `TenDiaDiem`, `DiaChi`, `NguoiPhuTrach`, `Is
 (10, 'A42.107', 'Dãy A4, Tầng 1, Phòng 7', 'Trần Minh D', 0, NULL, NULL, '2'),
 (11, 'A42.108', 'Dãy A4, Tầng 1, Phòng 8', 'Trần Minh D', 0, NULL, NULL, '2'),
 (12, 'A42.109', 'Dãy A4, Tầng 1, Phòng 9', 'Trần Minh D', 0, NULL, NULL, '2'),
-(13, 'A42.110', 'Dãy A4, Tầng 1, Phòng 10', 'Trần Minh D', 0, NULL, NULL, '2');
+(13, 'A42.110', 'Dãy A4, Tầng 1, Phòng 10', 'Trần Minh D', 0, NULL, NULL, '2'),
+(15, 'A42.111', 'Dãy A4, Tầng 1, Phòng 11', 'Trần Minh D', 0, NULL, NULL, '2'),
+(16, 'A42.112', 'Dãy A4, Tầng 1, Phòng 12', 'Trần Minh D', 0, NULL, NULL, '2'),
+(17, 'A42.113', 'Dãy A4, Tầng 1, Phòng 13', 'Trần Minh D', 0, NULL, NULL, '2');
 
 -- --------------------------------------------------------
 
@@ -566,7 +569,7 @@ ALTER TABLE `yeucaumuon`
 -- AUTO_INCREMENT cho bảng `diadiem`
 --
 ALTER TABLE `diadiem`
-  MODIFY `MaDiaDiem` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `MaDiaDiem` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT cho bảng `khoaphongban`

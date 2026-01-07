@@ -90,7 +90,11 @@ Website phục vụ cho nhiều đối tượng sử dụng như **giảng viên
 - **Hồ Lý Minh Lữ - Nguyễn Hữu Luân - Trần Trung Phúc**  
 - Sinh viên Công nghệ Thông tin  
 - Trường Kỹ thuật và Công nghệ - Trường Đại học Trà Vinh  
-
+- Liên hệ:
+  - holyminhlu1@gmail.com
+  - nguyenhuuluan19092004@gmail.com
+  - trantrungphuc98021@gmail.com
+  
 ---
 
 ## 📄 Giấy phép

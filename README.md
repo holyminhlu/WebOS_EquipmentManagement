@@ -5,7 +5,7 @@
 Hệ thống mượn – trả thiết bị giảng dạy là một website hỗ trợ công tác **quản lý, đăng ký, mượn, trả và theo dõi tình trạng các thiết bị giảng dạy** tại Trường Đại học Trà Vinh.  
 Hệ thống được xây dựng nhằm số hóa quy trình quản lý thiết bị, giảm thao tác thủ công, nâng cao hiệu quả vận hành và minh bạch dữ liệu.
 
-Website phục vụ cho nhiều đối tượng sử dụng như **giảng viên, cán bộ quản lý và quản trị hệ thống**, đảm bảo phân quyền rõ ràng và an toàn dữ liệu.
+Website phục vụ cho nhiều đối tượng sử dụng như **giảng viên, sinh viên, cán bộ quản lý và quản trị hệ thống**, đảm bảo phân quyền rõ ràng và an toàn dữ liệu.
 
 ---
 
@@ -19,7 +19,7 @@ Website phục vụ cho nhiều đối tượng sử dụng như **giảng viên
 ---
 
 ## 👥 Đối tượng sử dụng
-- **Giảng viên**: đăng ký mượn, trả thiết bị
+- **Giảng viên, sinh viên**: đăng ký mượn, trả thiết bị
 - **Cán bộ quản lý thiết bị**: duyệt yêu cầu, quản lý kho
 - **Quản trị viên hệ thống**: quản lý người dùng, danh mục, báo cáo
 
@@ -29,7 +29,7 @@ Website phục vụ cho nhiều đối tượng sử dụng như **giảng viên
 
 ### 🔐 Xác thực & phân quyền
 - Đăng nhập hệ thống
-- Phân quyền theo vai trò (Giảng viên / Cán bộ / Admin)
+- Phân quyền theo vai trò (Giảng viên/ Sinh viên / Cán bộ / Admin)
 - Quản lý tài khoản người dùng
 
 ### 📦 Quản lý thiết bị
@@ -38,7 +38,7 @@ Website phục vụ cho nhiều đối tượng sử dụng như **giảng viên
 - Theo dõi tình trạng: sẵn sàng, đang mượn, hư hỏng, bảo trì
 
 ### 📋 Mượn – trả thiết bị
-- Giảng viên gửi yêu cầu mượn thiết bị
+- Giảng viên, sinh viên gửi yêu cầu mượn thiết bị
 - Cán bộ duyệt / từ chối yêu cầu
 - Ghi nhận thông tin trả thiết bị
 - Xử lý trả trễ và vi phạm (nếu có)

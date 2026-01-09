@@ -20,8 +20,8 @@ Website phục vụ cho nhiều đối tượng sử dụng như **giảng viên
 
 ## 👥 Đối tượng sử dụng
 - **Giảng viên, sinh viên**: đăng ký mượn, trả thiết bị
-- **Cán bộ quản lý thiết bị**: duyệt yêu cầu, quản lý kho
-- **Quản trị viên hệ thống**: quản lý người dùng, danh mục, báo cáo
+- **Cán bộ quản lý thiết bị**: duyệt yêu cầu, quản lý kho, báo bảo trì
+- **Quản trị viên hệ thống**: quản lý người dùng, danh mục, báo cáo, bảo trì, Log Audit
 
 ---
 
